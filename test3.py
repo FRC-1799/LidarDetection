@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''Animates distances and measurment quality'''
-from pyrplidar import PyRPlidar
+from lidarLib.lidar import lidar
 import matplotlib.pyplot as plot
 import numpy as np
 import matplotlib.animation as animation
@@ -20,7 +20,7 @@ def update_line(num, iterator, line):
     return line,
 
 def run():
-    lidar = PyRPlidar()
+    lidar = lidar()
     lidar.connect(port="/dev/ttyUSB0", baudrate=256000, timeout=3)
     lidar.set_motor_pwm(500)
     time.sleep(2)
