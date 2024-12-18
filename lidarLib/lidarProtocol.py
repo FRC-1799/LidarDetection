@@ -1,5 +1,6 @@
 import struct
 import codecs
+import math
 
 
 RPLIDAR_SYNC_BYTE1 = b'\xA5'
@@ -225,6 +226,17 @@ class PyRPlidarMeasurement:
         }
         return str(data)
 
+    def getAngle(self):
+        return self.angle
+
+    def getDistance(self):
+        return self.distance
+
+    def getX(self):
+        return math.cos(math.radians(self.angle))*self.distance
+
+    def getY(self):
+        return math.sin(math.radians(self.angle))*self.distance
 
 class PyRPlidarMeasurementHQ:
     

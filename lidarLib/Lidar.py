@@ -1,12 +1,12 @@
 
-from lidarLib.pyrplidar_serial import PyRPlidarSerial
-from lidarLib.pyrplidar_protocol import *
-import lidarLib.pyrplidar_protocol
+from lidarLib.pyrplidarSerial import PyRPlidarSerial
+from lidarLib.lidarProtocol import *
+import lidarLib.lidarProtocol
 from lidarLib.lidarMap import lidarMap
 
 
 
-class lidar:
+class Lidar:
 
     def __init__(self):
         self.lidar_serial = None

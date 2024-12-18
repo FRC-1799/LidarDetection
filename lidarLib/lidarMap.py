@@ -1,4 +1,4 @@
-class pyrplidarMap:
+class lidarMap:
     def __init__(self, hostLidar, startPoint=0, endFunction = lambda map:None, seedPoints={}):
         
         self.points=seedPoints
@@ -8,6 +8,8 @@ class pyrplidarMap:
         self.hostLidar=hostLidar
         self.isFinished=False
 
+    def __array__(self):
+        return self.getPoints()
 
     def addVal(self, point):
         
@@ -32,5 +34,7 @@ class pyrplidarMap:
         return abs(min(self.points.items(), key=lambda _, value: abs(value - angle))[1].angle-angle)
     
     def getPoints(self):
-        return self.points.values
+        return self.points.values()
+    
+
     
