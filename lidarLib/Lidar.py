@@ -13,6 +13,8 @@ class Lidar:
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.lastMap=None
+        self.currentScanner=None
+        
     
     def __del__(self):
         self.disconnect()
@@ -33,6 +35,7 @@ class Lidar:
                 self.set_motor_pwm(0)
             self.lidar_serial.close()
             self.lidar_serial = None
+            self.currentScanner=None
             print("PyRPlidar Info : device is disconnected")
 
 
@@ -126,7 +129,10 @@ class Lidar:
         
         return scan_modes
 
-    
+    def getMeasurment(self, discriptor):
+        data = self.receiveData(discriptor)
+        self.getCurrentMap().addData(data)
+        return PyRPlidarMeasurement(data)
 
     def startScan(self):
         self.sendCommand(RPLIDAR_CMD_SCAN)
@@ -174,16 +180,15 @@ class Lidar:
         return scanGenerator
 
     
-    def forceScan(self):
+    def forceScan(self, runScan=True):
         self.sendCommand(RPLIDAR_CMD_FORCE_SCAN)
         discriptor = self.receiveDiscriptor()
-        
         def scanGenerator():
             while True:
-                data = self.receiveData(discriptor)
-                self.getCurrentMap().addData(data)
-                yield PyRPlidarMeasurement(data)
+                print("test")
+                yield self.getMeasurment(discriptor)
         
+        scanGenerator()
         return scanGenerator
     
     def mapIsDone(self):

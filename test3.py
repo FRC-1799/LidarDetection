@@ -34,6 +34,7 @@ def run():
     axis.grid(True)
     lidar.forceScan()
     time.sleep(1)
+    lidar.currentMap.printMap()
 
     
     # anim=animation.FuncAnimation(fig, update_line,
