@@ -181,7 +181,7 @@ class Lidar:
         def scanGenerator():
             while True:
                 data = self.receiveData(discriptor)
-                self.currentMap.addData(data)
+                self.getCurrentMap().addData(data)
                 yield PyRPlidarMeasurement(data)
         
         return scanGenerator
@@ -189,4 +189,7 @@ class Lidar:
     def mapIsDone(self):
         self.lastMap=self.currentMap
         self.currentMap=lidarMap(self)
+
+    def getCurrentMap(self):
+        return self.currentMap
 

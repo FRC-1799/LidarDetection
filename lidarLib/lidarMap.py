@@ -34,7 +34,7 @@ class lidarMap:
         return abs(min(self.points.items(), key=lambda _, value: abs(value - angle))[1].angle-angle)
     
     def getPoints(self):
-        return self.points.values()
+        return list(self.points.values())
     
 
     
