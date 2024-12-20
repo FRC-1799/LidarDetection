@@ -3,20 +3,25 @@ from lidarLib.pyrplidarSerial import PyRPlidarSerial
 from lidarLib.lidarProtocol import *
 import lidarLib.lidarProtocol
 from lidarLib.lidarMap import lidarMap
+from threading import Timer
 
 
 
 class Lidar:
 
-    def __init__(self):
+    def __init__(self, hz=50):
         self.lidar_serial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.lastMap=None
         self.currentScanner=None
-        
+        self.hz=hz
+        self.timer=None
+        self.dataDiscriptor=None
+
     
     def __del__(self):
+        
         self.disconnect()
 
     
@@ -25,6 +30,7 @@ class Lidar:
         self.lidar_serial = PyRPlidarSerial()
         self.lidar_serial.open(port, baudrate, timeout)
         print("PyRPlidar Info : device is connected")
+        self.timer = Timer(1/self.hz, self.update)
 
 
     def disconnect(self, leaveRunning=False):
@@ -34,11 +40,19 @@ class Lidar:
                 self.stop()
                 self.set_motor_pwm(0)
             self.lidar_serial.close()
+            self.timer.cancel()
+            self.timer=None
             self.lidar_serial = None
             self.currentScanner=None
             print("PyRPlidar Info : device is disconnected")
 
-
+    def update(self):
+        while True:
+            try:
+                newData=self.receiveData(self.dataDiscriptor)
+                self.currentMap.update(newData)
+            except:
+                break
 
     def sendCommand(self, cmd, payload=None):
         if self.lidar_serial == None:
@@ -58,7 +72,7 @@ class Lidar:
 
     def receiveData(self, discriptor):
         if self.lidar_serial == None:
-            raise PyRPlidarConnectionError("PyRPlidar Error : received data length is mismatched")
+            raise PyRPlidarConnectionError("PyRPlidar Error : device is not connected")
         
         data = self.lidar_serial.receive_data(discriptor.data_length)
         if len(data) != discriptor.data_length:
@@ -129,24 +143,12 @@ class Lidar:
         
         return scan_modes
 
-    def getMeasurment(self, discriptor):
-        data = self.receiveData(discriptor)
-        self.getCurrentMap().addData(data)
-        return PyRPlidarMeasurement(data)
 
     def startScan(self):
         self.sendCommand(RPLIDAR_CMD_SCAN)
-        discriptor = self.receiveDiscriptor()
-    
-        def scanGenerator():
-            while True:
-                data = self.receiveData(discriptor)
-                self.currentMap.addData(data)
-                yield PyRPlidarMeasurement(data)
-    
-        return scanGenerator
+        self.dataDiscriptor = self.receiveDiscriptor()
 
-    
+    @DeprecationWarning
     def startScanExpress(self, mode):
         
         self.sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
@@ -180,16 +182,10 @@ class Lidar:
         return scanGenerator
 
     
-    def forceScan(self, runScan=True):
+    def forceScan(self):
         self.sendCommand(RPLIDAR_CMD_FORCE_SCAN)
-        discriptor = self.receiveDiscriptor()
-        def scanGenerator():
-            while True:
-                print("test")
-                yield self.getMeasurment(discriptor)
-        
-        scanGenerator()
-        return scanGenerator
+        self.dataDiscriptor = self.receiveDiscriptor()
+
     
     def mapIsDone(self):
         self.lastMap=self.currentMap
