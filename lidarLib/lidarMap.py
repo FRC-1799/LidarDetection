@@ -12,7 +12,7 @@ class lidarMap:
         return self.getPoints()
 
     def addVal(self, point):
-        
+        print("valHasBeenAdded")
         if self.pointIsPastLoop(point):
             self.hostLidar.mapIsDone()
             self.endFunction(self)

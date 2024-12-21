@@ -16,7 +16,7 @@ class Lidar:
         self.lastMap=None
         self.currentScanner=None
         self.hz=hz
-        self.timer=None
+        self.timer = None
         self.dataDiscriptor=None
 
     
@@ -29,9 +29,12 @@ class Lidar:
     def connect(self, port="/dev/ttyUSB0", baudrate=115200, timeout=3):
         self.lidar_serial = PyRPlidarSerial()
         self.lidar_serial.open(port, baudrate, timeout)
+        self.rebootTimer()
         print("PyRPlidar Info : device is connected")
+        
+    def rebootTimer(self):
         self.timer = Timer(1/self.hz, self.update)
-
+        self.timer.start()
 
     def disconnect(self, leaveRunning=False):
         
@@ -41,18 +44,19 @@ class Lidar:
                 self.set_motor_pwm(0)
             self.lidar_serial.close()
             self.timer.cancel()
-            self.timer=None
             self.lidar_serial = None
             self.currentScanner=None
             print("PyRPlidar Info : device is disconnected")
 
     def update(self):
+        
         while True:
             try:
                 newData=self.receiveData(self.dataDiscriptor)
                 self.currentMap.update(newData)
             except:
                 break
+        self.rebootTimer()
 
     def sendCommand(self, cmd, payload=None):
         if self.lidar_serial == None:
