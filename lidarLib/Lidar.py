@@ -14,7 +14,7 @@ class Lidar:
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.lastMap=None
-        self.currentScanner=None
+        
         self.hz=hz
         self.timer = None
         self.dataDiscriptor=None
@@ -30,7 +30,10 @@ class Lidar:
         self.lidar_serial = PyRPlidarSerial()
         self.lidar_serial.open(port, baudrate, timeout)
         self.rebootTimer()
-        print("PyRPlidar Info : device is connected")
+        if self.lidar_serial._serial!=None and self.lidar_serial._serial.is_open():
+            print("PyRPlidar Info : device is connected")
+        else:
+            raise ConnectionError("could not find lidar unit")
         
     def rebootTimer(self):
         self.timer = Timer(1/self.hz, self.update)
@@ -45,7 +48,6 @@ class Lidar:
             self.lidar_serial.close()
             self.timer.cancel()
             self.lidar_serial = None
-            self.currentScanner=None
             print("PyRPlidar Info : device is disconnected")
 
     def update(self):
@@ -54,7 +56,8 @@ class Lidar:
             try:
                 newData=self.receiveData(self.dataDiscriptor)
                 self.currentMap.update(newData)
-            except:
+            except Exception as e:
+                #print(e)
                 break
         self.rebootTimer()
 
