@@ -4,6 +4,7 @@ from lidarLib.lidarProtocol import *
 import lidarLib.lidarProtocol
 from lidarLib.lidarMap import lidarMap
 from threading import Timer
+import time
 
 
 
@@ -34,6 +35,8 @@ class Lidar:
             print("PyRPlidar Info : device is connected")
         else:
             raise ConnectionError("could not find lidar unit")
+        # self.reset()
+        # self.lidarSerial.flush()
         
     def rebootTimer(self):
         self.timer = Timer(1/self.hz, self.update)
@@ -154,7 +157,11 @@ class Lidar:
 
 
     def startScan(self):
+        #self.reset()
+        #time.sleep(0.01)
+        #self.lidarSerial.flush()
         self.sendCommand(RPLIDAR_CMD_SCAN)
+        
         self.dataDiscriptor = self.receiveDiscriptor()
 
     @DeprecationWarning
@@ -197,8 +204,13 @@ class Lidar:
 
     
     def mapIsDone(self):
+        print(len(self.currentMap.getPoints()))
+        self.currentMap.printMap()
+        if len(self.currentMap.getPoints())<10:
+            raise ValueError()
         self.lastMap=self.currentMap
         self.currentMap=lidarMap(self)
+        print("New map \n\n\n\n")
 
     def getCurrentMap(self):
         return self.currentMap
