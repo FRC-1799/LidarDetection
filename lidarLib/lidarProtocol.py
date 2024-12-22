@@ -201,7 +201,7 @@ class PyRPlidarScanMode:
 
 
 
-class PyRPlidarMeasurement:
+class lidarMeasurement:
 
     def __init__(self, raw_bytes=None, measurement_hq=None):
         if raw_bytes is not None:

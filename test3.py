@@ -23,8 +23,8 @@ def update_line(num, lidar, line):
 
 def run():
     lidar = Lidar()
-    lidar.connect(port="/dev/ttyUSB0", baudrate=256000, timeout=3)
-    lidar.set_motor_pwm(500)
+    lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
+    lidar.set_motor_pwm(1000)
     time.sleep(2)
     fig = plot.figure()
     axis = plot.subplot(111, projection='polar')
@@ -32,7 +32,7 @@ def run():
                            cmap=plot.cm.Greys_r, lw=0)
     axis.set_rmax(DMAX)
     axis.grid(True)
-    lidar.forceScan()
+    lidar.startScan()
     time.sleep(1)
     lidar.currentMap.printMap()
 

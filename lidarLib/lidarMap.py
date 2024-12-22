@@ -12,12 +12,19 @@ class lidarMap:
         return self.getPoints()
 
     def addVal(self, point):
-        print("valHasBeenAdded")
-        if self.pointIsPastLoop(point):
+        print("valHasBeenAdded", point)
+
+        if point.start_flag:
             self.hostLidar.mapIsDone()
             self.endFunction(self)
             isFinished=True
             return
+
+        # if self.pointIsPastLoop(point):
+        #     self.hostLidar.mapIsDone()
+        #     self.endFunction(self)
+        #     isFinished=True
+        #     return
         self.points[point.angle]=point
 
 

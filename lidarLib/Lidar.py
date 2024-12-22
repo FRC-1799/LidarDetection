@@ -9,8 +9,8 @@ from threading import Timer
 
 class Lidar:
 
-    def __init__(self, hz=50):
-        self.lidar_serial = None
+    def __init__(self, hz=400):
+        self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.lastMap=None
@@ -27,10 +27,10 @@ class Lidar:
     
 
     def connect(self, port="/dev/ttyUSB0", baudrate=115200, timeout=3):
-        self.lidar_serial = PyRPlidarSerial()
-        self.lidar_serial.open(port, baudrate, timeout)
+        self.lidarSerial = PyRPlidarSerial()
+        self.lidarSerial.open(port, baudrate, timeout)
         self.rebootTimer()
-        if self.lidar_serial._serial!=None and self.lidar_serial._serial.is_open():
+        if self.lidarSerial.isOpen():
             print("PyRPlidar Info : device is connected")
         else:
             raise ConnectionError("could not find lidar unit")
@@ -41,47 +41,49 @@ class Lidar:
 
     def disconnect(self, leaveRunning=False):
         
-        if self.lidar_serial is not None:
+        if self.lidarSerial is not None:
             if not leaveRunning:
                 self.stop()
                 self.set_motor_pwm(0)
-            self.lidar_serial.close()
+            self.lidarSerial.close()
             self.timer.cancel()
-            self.lidar_serial = None
+            self.lidarSerial = None
             print("PyRPlidar Info : device is disconnected")
 
     def update(self):
         
         while True:
             try:
-                newData=self.receiveData(self.dataDiscriptor)
-                self.currentMap.update(newData)
+                newData=lidarMeasurement(self.receiveData(self.dataDiscriptor))
+                self.currentMap.addVal(newData)
             except Exception as e:
-                #print(e)
+                print(e)
                 break
         self.rebootTimer()
+        print("thingy")
 
     def sendCommand(self, cmd, payload=None):
-        if self.lidar_serial == None:
+        if self.lidarSerial == None:
             raise PyRPlidarConnectionError("PyRPlidar Error : device is not connected")
 
-        self.lidar_serial.send_data(PyRPlidarCommand(cmd, payload).raw_bytes)
+        self.lidarSerial.send_data(PyRPlidarCommand(cmd, payload).raw_bytes)
 
     def receiveDiscriptor(self):
-        if self.lidar_serial == None:
+        if self.lidarSerial == None:
             raise PyRPlidarConnectionError("PyRPlidar Error : device is not connected")
         
-        discriptor = PyRPlidarResponse(self.lidar_serial.receive_data(RPLIDAR_DESCRIPTOR_LEN))
+        discriptor = PyRPlidarResponse(self.lidarSerial.receive_data(RPLIDAR_DESCRIPTOR_LEN))
         
         if discriptor.sync_byte1 != RPLIDAR_SYNC_BYTE1[0] or discriptor.sync_byte2 != RPLIDAR_SYNC_BYTE2[0]:
             raise PyRPlidarProtocolError("PyRPlidar Error : sync bytes are mismatched", hex(discriptor.sync_byte1), hex(discriptor.sync_byte2))
         return discriptor
 
     def receiveData(self, discriptor):
-        if self.lidar_serial == None:
+        
+        if self.lidarSerial == None:
             raise PyRPlidarConnectionError("PyRPlidar Error : device is not connected")
         
-        data = self.lidar_serial.receive_data(discriptor.data_length)
+        data = self.lidarSerial.receive_data(discriptor.data_length)
         if len(data) != discriptor.data_length:
             raise PyRPlidarProtocolError()
         return data
@@ -95,7 +97,7 @@ class Lidar:
         self.sendCommand(RPLIDAR_CMD_RESET)
 
     def set_motor_pwm(self, pwm):
-        self.lidar_serial.set_dtr(False)
+        self.lidarSerial.set_dtr(False)
         self.sendCommand(RPLIDAR_CMD_SET_MOTOR_PWM, struct.pack("<H", pwm))
     
     
@@ -182,7 +184,7 @@ class Lidar:
                 
                 nodes = capsule_type._parse_capsule(capsule_prev, capsule_current)
                 for index, node in enumerate(nodes):
-                     yield PyRPlidarMeasurement(raw_bytes=None, measurement_hq=node)
+                     yield lidarMeasurement(raw_bytes=None, measurement_hq=node)
     
                 capsule_prev = capsule_current
 
