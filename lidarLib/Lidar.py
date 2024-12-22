@@ -53,14 +53,14 @@ class Lidar:
     def update(self):
         
         while True:
-            try:
+            if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
+            
                 newData=lidarMeasurement(self.receiveData(self.dataDiscriptor))
                 self.currentMap.addVal(newData)
-            except Exception as e:
-                print(e)
+            else:
                 break
         self.rebootTimer()
-        print("thingy")
+        #print("thingy")
 
     def sendCommand(self, cmd, payload=None):
         if self.lidarSerial == None:

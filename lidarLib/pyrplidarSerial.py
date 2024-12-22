@@ -33,3 +33,7 @@ class PyRPlidarSerial:
 
     def isOpen(self):
         return self.serial!=None and self.serial.isOpen()
+    
+
+    def bufferSize(self):
+        return self.serial.in_waiting
