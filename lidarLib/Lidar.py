@@ -51,7 +51,7 @@ class Lidar:
             print("PyRPlidar Info : device is disconnected")
 
     def update(self):
-        
+
         while True:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
             
@@ -59,8 +59,11 @@ class Lidar:
                 self.currentMap.addVal(newData)
             else:
                 break
-        self.rebootTimer()
+        
         #print("thingy")
+
+
+        self.rebootTimer()
 
     def sendCommand(self, cmd, payload=None):
         if self.lidarSerial == None:

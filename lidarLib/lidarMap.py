@@ -7,6 +7,7 @@ class lidarMap:
         self.endFunction=endFunction
         self.hostLidar=hostLidar
         self.isFinished=False
+        
 
     def __array__(self):
         return self.getPoints()
@@ -26,6 +27,7 @@ class lidarMap:
         #     isFinished=True
         #     return
         self.points[point.angle]=point
+        self.thisFuncDoesNothing()
 
 
     def pointIsPastLoop(self, point):
@@ -46,8 +48,13 @@ class lidarMap:
 
     def printMap(self):
         print("current map:")
-        for point in list(self.points.values()):
+        for point in self.getPoints():
             print(point)
-    
+            pass
+
+    def thisFuncDoesNothing(self):
+        for point in self.points:
+            print(point)
+            pass
 
     

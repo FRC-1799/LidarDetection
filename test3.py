@@ -35,6 +35,8 @@ def run():
     lidar.startScan()
     time.sleep(1)
     lidar.currentMap.printMap()
+    print(lidar.currentMap.points)
+    #lidar.currentMap.thisFuncDoesNothing()
 
     
     # anim=animation.FuncAnimation(fig, update_line,
