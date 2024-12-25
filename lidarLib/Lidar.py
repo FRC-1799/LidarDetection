@@ -1,9 +1,10 @@
 
+from time import sleep
 from lidarLib.pyrplidarSerial import PyRPlidarSerial
 from lidarLib.lidarProtocol import *
 import lidarLib.lidarProtocol
 from lidarLib.lidarMap import lidarMap
-from threading import Timer
+import threading
 
 
 
@@ -14,45 +15,60 @@ class Lidar:
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.lastMap=None
-        
+        #self.eventLoop()
         self.hz=hz
-        self.timer = None
+        self.loop = None
         self.dataDiscriptor=None
+        self.isDone=False
 
     
     def __del__(self):
         
         self.disconnect()
 
-    
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exceptionType, exceptionValue, exceptionTraceback):
+        self.disconnect()
 
     def connect(self, port="/dev/ttyUSB0", baudrate=115200, timeout=3):
         self.lidarSerial = PyRPlidarSerial()
         self.lidarSerial.open(port, baudrate, timeout)
-        self.rebootTimer()
+        self.bootLoop()
         if self.lidarSerial.isOpen():
             print("PyRPlidar Info : device is connected")
         else:
             raise ConnectionError("could not find lidar unit")
         
-    def rebootTimer(self):
-        self.timer = Timer(1/self.hz, self.update)
-        self.timer.start()
+    def bootLoop(self):
+        self.loop = threading.Thread(target=self.updateLoop, daemon=False)
+        self.loop.start()
+
+
+
+    def updateLoop(self):
+        while not self.isDone:
+            self.update()
+            
+            sleep(1/self.hz)
 
     def disconnect(self, leaveRunning=False):
         
         if self.lidarSerial is not None:
+            self.isDone=True
             if not leaveRunning:
                 self.stop()
                 self.set_motor_pwm(0)
             self.lidarSerial.close()
-            self.timer.cancel()
+            
             self.lidarSerial = None
             print("PyRPlidar Info : device is disconnected")
 
     def update(self):
 
-        while True:
+        while not self.isDone:
+            #print(self.lidarSerial.bufferSize())
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
             
                 newData=lidarMeasurement(self.receiveData(self.dataDiscriptor))
@@ -63,7 +79,7 @@ class Lidar:
         #print("thingy")
 
 
-        self.rebootTimer()
+        
 
     def sendCommand(self, cmd, payload=None):
         if self.lidarSerial == None:
@@ -200,8 +216,11 @@ class Lidar:
 
     
     def mapIsDone(self):
+        print("map swap attempted")
         self.lastMap=self.currentMap
-        self.currentMap=lidarMap(self)
+        self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1)
+        print(len(self.currentMap.getPoints()), self.currentMap.mapID)
+        print(len(self.lastMap.getPoints()), self.lastMap.mapID)
 
     def getCurrentMap(self):
         return self.currentMap
