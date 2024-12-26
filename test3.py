@@ -17,7 +17,7 @@ def update_line(num, lidar, line):
     offsets = np.array([[point.angle*3.14/180, point.distance] for point in scan])
     #offsets=[scan[0].angle, scan[0].distance]
     line.set_offsets(offsets)
-    intens = np.array([point.quality/100 for point in scan])
+    intens = np.array([point.quality for point in scan])
     line.set_array(intens)
     return line,
 
@@ -28,11 +28,11 @@ def run():
     time.sleep(2)
     fig = plot.figure()
     axis = plot.subplot(111, projection='polar')
-    line = axis.scatter([0, 1], [100, 2000], s=250, c=[IMIN, IMAX],
+    line = axis.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
                            cmap=plot.cm.Greys_r, lw=0)
     axis.set_rmax(DMAX)
     axis.grid(True)
-    lidar.startScan()
+    lidar.startScanExpress(4)
     time.sleep(1)
     #lidar.currentMap.printMap()
     #print(lidar.currentMap.points)

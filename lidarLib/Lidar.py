@@ -10,13 +10,14 @@ import threading
 
 class Lidar:
 
-    def __init__(self, hz=400):
+    def __init__(self):
         self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.lastMap=None
         #self.eventLoop()
-        self.hz=hz
+        
+        self.capsuleType=None
         self.loop = None
         self.dataDiscriptor=None
         self.isDone=False
@@ -35,23 +36,21 @@ class Lidar:
     def connect(self, port="/dev/ttyUSB0", baudrate=115200, timeout=3):
         self.lidarSerial = PyRPlidarSerial()
         self.lidarSerial.open(port, baudrate, timeout)
-        self.bootLoop()
+        
         if self.lidarSerial.isOpen():
             print("PyRPlidar Info : device is connected")
         else:
+            self.readToCapsule=None
             raise ConnectionError("could not find lidar unit")
         
-    def bootLoop(self):
+
+
+
+    def establishLoop(self, updateFunc):
+        self.update=updateFunc
+        self.dataDiscriptor = self.receiveDiscriptor()
         self.loop = threading.Thread(target=self.updateLoop, daemon=False)
         self.loop.start()
-
-
-
-    def updateLoop(self):
-        while not self.isDone:
-            self.update()
-            
-            sleep(1/self.hz)
 
     def disconnect(self, leaveRunning=False):
         
@@ -65,18 +64,50 @@ class Lidar:
             self.lidarSerial = None
             print("PyRPlidar Info : device is disconnected")
 
-    def update(self):
+    def updateLoop(self):
+        while not self.isDone:
+            self.update()
+            sleep(0.001)
+            
+        
 
+    def update(self):
+        
+        raise PyRPlidarProtocolError("Update was called without a valid connection established, this may because a user tried to call it")
+
+
+    def standardUpdate(self):
+        
         while not self.isDone:
             #print(self.lidarSerial.bufferSize())
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
-            
+                #print("update working")
                 newData=lidarMeasurement(self.receiveData(self.dataDiscriptor))
                 self.currentMap.addVal(newData)
             else:
+                #print("break hit")
                 break
         
         #print("thingy")
+
+    def capsuleUpdate(self):
+        data = self.receiveData(self.dataDiscriptor)
+        capsule_prev = self.capsuleType(data)
+        capsule_current = None
+        
+        while not self.isDone:
+            if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
+                data = self.receiveData(self.dataDiscriptor)
+                capsule_current = self.capsuleType(data)
+                
+                nodes = self.capsuleType._parse_capsule(capsule_prev, capsule_current)
+                for index, node in enumerate(nodes):
+                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node))
+
+                capsule_prev = capsule_current
+            else:
+                break
+
 
 
         
@@ -174,45 +205,32 @@ class Lidar:
 
     def startScan(self):
         self.sendCommand(RPLIDAR_CMD_SCAN)
-        self.dataDiscriptor = self.receiveDiscriptor()
+        self.establishLoop(self.standardUpdate)
 
-    @DeprecationWarning
+    
     def startScanExpress(self, mode):
         
         self.sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
-        discriptor = self.receiveDiscriptor()
+        self.establishLoop(self.capsuleUpdate)
 
-        if discriptor.data_type == 0x82:
-            capsule_type = PyRPlidarScanCapsule
-        elif discriptor.data_type == 0x84:
-            capsule_type = PyRPlidarScanUltraCapsule
-        elif discriptor.data_type == 0x85:
-            capsule_type = PyRPlidarScanDenseCapsule
+        if self.dataDiscriptor.data_type == 0x82:
+            self.capsuleType = PyRPlidarScanCapsule
+        elif self.dataDiscriptor.data_type == 0x84:
+            self.capsuleType = PyRPlidarScanUltraCapsule
+        elif self.dataDiscriptor.data_type == 0x85:
+            self.capsuleType = PyRPlidarScanDenseCapsule
         else:
             raise PyRPlidarProtocolError("RPlidar Error : scan data type is not supported")
         
-        def scanGenerator():
-            
-            data = self.receiveData(discriptor)
-            capsule_prev = capsule_type(data)
-            capsule_current = None
-            
-            while True:
-                data = self.receiveData(discriptor)
-                capsule_current = capsule_type(data)
-                
-                nodes = capsule_type._parse_capsule(capsule_prev, capsule_current)
-                for index, node in enumerate(nodes):
-                     yield lidarMeasurement(raw_bytes=None, measurement_hq=node)
-    
-                capsule_prev = capsule_current
 
-        return scanGenerator
+            
+
+        
 
     
     def forceScan(self):
         self.sendCommand(RPLIDAR_CMD_FORCE_SCAN)
-        self.dataDiscriptor = self.receiveDiscriptor()
+        self.establishLoop(self.standardUpdate)
 
     
     def mapIsDone(self):
