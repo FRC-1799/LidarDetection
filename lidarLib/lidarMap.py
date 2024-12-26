@@ -1,5 +1,5 @@
 class lidarMap:
-    def __init__(self, hostLidar, startPoint=0, endFunction = lambda map:None, seedPoints={}):
+    def __init__(self, hostLidar, startPoint=0, endFunction = lambda map:None, seedPoints={}, mapID=0):
         
         self.points=seedPoints
         self.startPoint=startPoint
@@ -7,6 +7,8 @@ class lidarMap:
         self.endFunction=endFunction
         self.hostLidar=hostLidar
         self.isFinished=False
+        self.mapID=mapID
+        
 
     def __array__(self):
         return self.getPoints()
@@ -19,6 +21,8 @@ class lidarMap:
             self.endFunction(self)
             isFinished=True
             return
+        
+
 
         # if self.pointIsPastLoop(point):
         #     self.hostLidar.mapIsDone()
@@ -26,6 +30,7 @@ class lidarMap:
         #     isFinished=True
         #     return
         self.points[point.angle]=point
+        #self.thisFuncDoesNothing()
 
 
     def pointIsPastLoop(self, point):
@@ -46,8 +51,11 @@ class lidarMap:
 
     def printMap(self):
         print("current map:")
-        for point in self.points:
+        #self.thisFuncDoesNothing()
+        for point in self.getPoints():
             print(point)
-    
+            pass
+
+
 
     

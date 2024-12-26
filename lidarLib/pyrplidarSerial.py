@@ -8,7 +8,7 @@ class PyRPlidarSerial:
 
     def open(self, port, baudrate, timeout):
         if self.serial is not None:
-            self.disconnect()
+            self.close()
         try:
             self.serial = serial.Serial(port, baudrate, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=timeout, dsrdtr=True)
         except serial.SerialException as err:
@@ -18,6 +18,7 @@ class PyRPlidarSerial:
         if self.serial is None:
             return
         self.serial.close()
+        self.serial=None
     
     def wait_data(self):
         pass
@@ -32,8 +33,13 @@ class PyRPlidarSerial:
         self.serial.dtr = value
 
     def isOpen(self):
-        return self.serial!=None and self.serial.isOpen()
+        return self.serial!=None 
     
 
     def bufferSize(self):
-        return self.serial.in_waiting
+        if self.isOpen():
+            return self.serial.in_waiting
+
+
+    def flush(self):
+        self.serial.reset_input_buffer()
