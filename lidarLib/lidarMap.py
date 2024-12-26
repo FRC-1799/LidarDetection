@@ -46,7 +46,7 @@ class lidarMap:
 
     def printMap(self):
         print("current map:")
-        for point in list(self.points.values()):
+        for point in self.getPoints():
             print(point)
     
 
