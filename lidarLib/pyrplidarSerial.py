@@ -37,6 +37,3 @@ class PyRPlidarSerial:
 
     def bufferSize(self):
         return self.serial.in_waiting
-
-    def flush(self):
-        self.serial.reset_input_buffer()
