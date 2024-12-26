@@ -82,8 +82,9 @@ class Lidar:
             #print(self.lidarSerial.bufferSize())
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
                 #print("update working")
-                newData=lidarMeasurement(self.receiveData(self.dataDiscriptor))
-                self.currentMap.addVal(newData)
+                newData=self.receiveData(self.dataDiscriptor)
+                print(self.validatePackage(newData, printErrors=True))
+                self.currentMap.addVal(lidarMeasurement(newData))
             else:
                 #print("break hit")
                 break
@@ -109,8 +110,40 @@ class Lidar:
                 break
 
 
+    def validatePackage(self, pack, printErrors=False):
+        startFlag = bool(pack[0] & 0x1)
+        quality = pack[0] >> 2
+        angle = ((pack[1] >> 1) + (pack[2] << 7)) / 64.0
+        distance = (pack[3] + (pack[4] << 8)) / 4.0
 
+
+        #checks first checksum
+        if startFlag == bool(pack[0]>>1 & 0x1):
+            if printErrors:
+                print("Start flag checksum was invalid")
+            return False
         
+        #checks second checksum
+        if not bool(pack[1]&0x1):
+            if printErrors:
+                print("second byte checksum was invalid")
+            return False
+
+        #checks if angle is over 360
+        if angle>360:
+            if printErrors:
+                print("angle was invalid at value ", angle)
+            return False
+        
+        #checks if distance is over 25 meters(max for lidar should be 16)
+        if distance>25000:
+            if printErrors:
+                print("distance was too far away to be legit at value ", distance)
+            return False
+
+        return True
+        
+
 
     def sendCommand(self, cmd, payload=None):
         if self.lidarSerial == None:

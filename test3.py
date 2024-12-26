@@ -32,7 +32,7 @@ def run():
                            cmap=plot.cm.Greys_r, lw=0)
     axis.set_rmax(DMAX)
     axis.grid(True)
-    lidar.startScanExpress(4)
+    lidar.startScan()
     time.sleep(1)
     #lidar.currentMap.printMap()
     #print(lidar.currentMap.points)
