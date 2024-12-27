@@ -21,6 +21,8 @@ class Lidar:
         self.loop = None
         self.dataDiscriptor=None
         self.isDone=False
+        self.currentMotorPWM=0
+        
 
     
     def __del__(self):
@@ -46,11 +48,12 @@ class Lidar:
 
 
 
-    def establishLoop(self, updateFunc):
+    def establishLoop(self, updateFunc,resetLoop=True):
         self.update=updateFunc
         self.dataDiscriptor = self.receiveDiscriptor()
-        self.loop = threading.Thread(target=self.updateLoop, daemon=False)
-        self.loop.start()
+        if resetLoop:
+            self.loop = threading.Thread(target=self.updateLoop, daemon=False)
+            self.loop.start()
 
     def disconnect(self, leaveRunning=False):
         
@@ -58,7 +61,7 @@ class Lidar:
             self.isDone=True
             if not leaveRunning:
                 self.stop()
-                self.set_motor_pwm(0)
+                self.setMotorPwm(0)
             self.lidarSerial.close()
             
             self.lidarSerial = None
@@ -69,7 +72,15 @@ class Lidar:
             self.update()
             sleep(0.001)
             
+    def restartScan(self):
+        self.stop()
+        self.setMotorPwm(0)
         
+        sleep(1)
+        self.lidarSerial.flush()
+        
+        
+        self.startScan()
 
     def update(self):
         
@@ -83,7 +94,9 @@ class Lidar:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
                 #print("update working")
                 newData=self.receiveData(self.dataDiscriptor)
-                print(self.validatePackage(newData, printErrors=True))
+                if not self.validatePackage(newData):
+                    self.restartScan()
+                    return
                 self.currentMap.addVal(lidarMeasurement(newData))
             else:
                 #print("break hit")
@@ -179,9 +192,11 @@ class Lidar:
     def reset(self):
         self.sendCommand(RPLIDAR_CMD_RESET)
 
-    def set_motor_pwm(self, pwm):
+    def setMotorPwm(self, pwm, overrideInternalValue=True):
         self.lidarSerial.set_dtr(False)
         self.sendCommand(RPLIDAR_CMD_SET_MOTOR_PWM, struct.pack("<H", pwm))
+        if overrideInternalValue:
+            self.currentMotorPWM=pwm
     
     
 
@@ -238,6 +253,7 @@ class Lidar:
 
     def startScan(self):
         self.sendCommand(RPLIDAR_CMD_SCAN)
+        self.setMotorPwm(self.currentMotorPWM)
         self.establishLoop(self.standardUpdate)
 
     
