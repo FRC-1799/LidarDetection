@@ -12,14 +12,18 @@ DMAX = 16000
 IMIN = 20
 IMAX = 20
 
-def update_line(num, lidar, line):
+def update_line(num, lidar, subplot):
     scan = lidar.lastMap.getPoints()
-    offsets = np.array([[point.angle, point.distance] for point in scan])
+
+    angles=np.array([point.angle for point in scan])
+    distances=np.array([point.distance for point in scan])
+    #offsets = np.array([[point.angle, point.distance] for point in scan])
     #offsets=[scan[0].angle, scan[0].distance]
-    line.set_offsets(offsets)
+    #subplot.set_offsets(offsets)
     intens = np.array([point.quality for point in scan])
-    line.set_array(intens)
-    return line,
+    #subplot.set_array(intens)
+
+    return subplot.scatter(angles*3.14/180, distances, s=1, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 def run():
     lidar = Lidar()
@@ -40,7 +44,7 @@ def run():
 
     
     anim=animation.FuncAnimation(fig, update_line,
-        fargs=(lidar, axis), interval=50, save_count=50)
+        fargs=(lidar, subplot), interval=50, save_count=50)
     # ani = animation.FuncAnimation(
     # fig, partial(update_line, lidar=lidar, line=line),
     #frames=np.linspace(0, 2*np.pi, 128), blit=True)

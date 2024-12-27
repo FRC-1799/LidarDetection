@@ -14,7 +14,7 @@ class lidarMap:
         return self.getPoints()
 
     def addVal(self, point):
-        print("valHasBeenAdded", point)
+        #print("valHasBeenAdded", point)
 
         if point.quality==0:
             return
