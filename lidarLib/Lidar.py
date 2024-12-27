@@ -74,13 +74,15 @@ class Lidar:
             
     def restartScan(self):
         self.stop()
-        self.setMotorPwm(0)
+        #self.setMotorPwm(0)
         
-        sleep(1)
+        #sleep(0.001)
         self.lidarSerial.flush()
         
         
-        self.startScan()
+        self.startRawScan()
+        
+
 
     def update(self):
         
@@ -94,7 +96,7 @@ class Lidar:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
                 #print("update working")
                 newData=self.receiveData(self.dataDiscriptor)
-                if not self.validatePackage(newData):
+                if not self.validatePackage(newData, printErrors=True):
                     self.restartScan()
                     return
                 self.currentMap.addVal(lidarMeasurement(newData))
@@ -252,10 +254,17 @@ class Lidar:
 
 
     def startScan(self):
+        
         self.sendCommand(RPLIDAR_CMD_SCAN)
-        self.setMotorPwm(self.currentMotorPWM)
+        #self.setMotorPwm(self.currentMotorPWM)
+        
         self.establishLoop(self.standardUpdate)
 
+
+
+    def startRawScan(self):
+        self.sendCommand(RPLIDAR_CMD_SCAN)
+        self.lidarSerial.receive_data(RPLIDAR_DESCRIPTOR_LEN)
     
     def startScanExpress(self, mode):
         

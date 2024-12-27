@@ -8,12 +8,12 @@ from functools import partial
 import time
 
 PORT_NAME = '/dev/ttyUSB0'
-DMAX = 4000
+DMAX = 16000
 IMIN = 20
 IMAX = 20
 
 def update_line(num, lidar, line):
-    scan = lidar.currentMap.getPoints()
+    scan = lidar.lastMap.getPoints()
     offsets = np.array([[point.angle*3.14/180, point.distance] for point in scan])
     #offsets=[scan[0].angle, scan[0].distance]
     line.set_offsets(offsets)
