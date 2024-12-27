@@ -24,7 +24,7 @@ def update_line(num, lidar, line):
 def run():
     lidar = Lidar()
     lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
-    lidar.set_motor_pwm(1000)
+    lidar.setMotorPwm(1000)
     time.sleep(2)
     fig = plot.figure()
     axis = plot.subplot(111, projection='polar')
@@ -47,7 +47,7 @@ def run():
     plot.show()
     
     lidar.stop()
-    lidar.set_motor_pwm(0)
+    lidar.setMotorPwm(0)
     lidar.disconnect()
     
     print("the run is done")

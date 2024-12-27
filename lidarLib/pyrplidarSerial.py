@@ -43,3 +43,4 @@ class PyRPlidarSerial:
 
     def flush(self):
         self.serial.reset_input_buffer()
+        self.serial.reset_output_buffer()
