@@ -14,7 +14,7 @@ IMAX = 20
 
 def update_line(num, lidar, line):
     scan = lidar.lastMap.getPoints()
-    offsets = np.array([[point.angle*3.14/180, point.distance] for point in scan])
+    offsets = np.array([[point.angle, point.distance] for point in scan])
     #offsets=[scan[0].angle, scan[0].distance]
     line.set_offsets(offsets)
     intens = np.array([point.quality for point in scan])
@@ -27,11 +27,11 @@ def run():
     lidar.setMotorPwm(1000)
     time.sleep(2)
     fig = plot.figure()
-    axis = plot.subplot(111, projection='polar')
-    line = axis.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
+    subplot = plot.subplot(111, projection='polar')
+    axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
                            cmap=plot.cm.Greys_r, lw=0)
-    axis.set_rmax(DMAX)
-    axis.grid(True)
+    subplot.set_rmax(DMAX)
+    subplot.grid(True)
     lidar.startScan()
     time.sleep(1)
     #lidar.currentMap.printMap()
@@ -40,7 +40,7 @@ def run():
 
     
     anim=animation.FuncAnimation(fig, update_line,
-        fargs=(lidar, line), interval=50, save_count=50)
+        fargs=(lidar, axis), interval=50, save_count=50)
     # ani = animation.FuncAnimation(
     # fig, partial(update_line, lidar=lidar, line=line),
     #frames=np.linspace(0, 2*np.pi, 128), blit=True)

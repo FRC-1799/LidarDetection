@@ -16,6 +16,9 @@ class lidarMap:
     def addVal(self, point):
         print("valHasBeenAdded", point)
 
+        if point.quality==0:
+            return
+
         if point.start_flag:
             self.hostLidar.mapIsDone()
             self.endFunction(self)
