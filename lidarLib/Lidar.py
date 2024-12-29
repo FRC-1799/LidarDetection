@@ -296,7 +296,7 @@ class Lidar:
         self.lastMap=self.currentMap
         self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1)
         print(len(self.currentMap.getPoints()),self.currentMap.len ,self.currentMap.mapID)
-        print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID)
+        print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID, self.lastMap.getRange())
         #print(self.currentMap.points==self.lastMap.points)
 
     def getCurrentMap(self):

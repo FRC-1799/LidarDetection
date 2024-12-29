@@ -23,12 +23,13 @@ def update_line(num, lidar, subplot):
     intens = np.array([point.quality for point in scan])
     #subplot.set_array(intens)
 
-    return subplot.scatter(angles*3.14/180, distances, s=1, c=intens, cmap=plot.cm.Greys_r, lw=0),
+    return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 def run():
     lidar = Lidar()
     lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
     lidar.setMotorPwm(1000)
+    lidar.startScan()
     time.sleep(2)
     fig = plot.figure()
     subplot = plot.subplot(111, projection='polar')
@@ -36,7 +37,7 @@ def run():
                            cmap=plot.cm.Greys_r, lw=0)
     subplot.set_rmax(DMAX)
     subplot.grid(True)
-    lidar.startScan()
+    
     time.sleep(1)
     #lidar.currentMap.printMap()
     #print(lidar.currentMap.points)

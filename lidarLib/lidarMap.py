@@ -1,5 +1,5 @@
 class lidarMap:
-    def __init__(self, hostLidar, startPoint=0, endFunction = lambda map:None, mapID=0):
+    def __init__(self, hostLidar, endFunction = lambda map:None, mapID=0):
         
         self.points={}
 
@@ -26,7 +26,6 @@ class lidarMap:
         if point.start_flag:
             self.hostLidar.mapIsDone()
             self.endFunction(self)
-            isFinished=True
             return
         
 
@@ -41,10 +40,12 @@ class lidarMap:
 
 
     def fetchPointAtClosestAngle(self, angle):
-        return min(self.points.items(), key=lambda _, value: abs(value - angle))[1]
+        if self.len==0:
+            return None
+        return self.points[min([key for key, value in self.points.items()], key=lambda value: abs(value - angle))]
     
     def getDistanceBetweeClosestAngle(self, angle):
-        return abs(min(self.points.items(), key=lambda _, value: abs(value - angle))[1].angle-angle)
+        return abs(self.fetchPointAtClosestAngle(angle).angle-angle)
     
     def getPoints(self):
         return list(self.points.values())
@@ -56,6 +57,9 @@ class lidarMap:
         for point in self.getPoints():
             print(point)
             pass
+
+    def getRange(self):
+        return abs(self.fetchPointAtClosestAngle(0).angle - self.fetchPointAtClosestAngle(360).angle)
 
 
 
