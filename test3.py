@@ -29,7 +29,12 @@ def run():
     lidar = Lidar()
     lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
     lidar.setMotorPwm(1000)
-    lidar.startScan()
+    
+    lidar.getScanModes()
+    print(lidar.getSampleRate())
+    print(lidar.getScanModeTypical())
+    lidar.startScanExpress(3)
+    #lidar.startScan()
     time.sleep(2)
     fig = plot.figure()
     subplot = plot.subplot(111, projection='polar')

@@ -214,7 +214,7 @@ class Lidar:
         data = self.receiveData(discriptor)
         return PyRPlidarHealth(data)
 
-    def getSamplerate(self):
+    def getSampleRate(self):
         self.sendCommand(RPLIDAR_CMD_GET_SAMPLERATE)
         discriptor = self.receiveDiscriptor()
         data = self.receiveData(discriptor)
@@ -232,7 +232,7 @@ class Lidar:
         return count
 
     def getScanModeTypical(self):
-        data = self.getLidarConf(struct.newPointpack("<I", RPLIDAR_CONF_SCAN_MODE_TYPICAL))
+        data = self.getLidarConf(struct.pack("<I", RPLIDAR_CONF_SCAN_MODE_TYPICAL))
         typical_mode = struct.unpack("<H", data[4:6])[0]
         return typical_mode
 
