@@ -8,7 +8,7 @@ from functools import partial
 import time
 
 PORT_NAME = '/dev/ttyUSB0'
-DMAX = 16000
+DMAX = 1600
 IMIN = 20
 IMAX = 20
 
@@ -33,13 +33,13 @@ def run():
     lidar.getScanModes()
     print(lidar.getSampleRate())
     print(lidar.getScanModeTypical())
-    lidar.startScanExpress(3)
-    #lidar.startScan()
+    #lidar.startScanExpress(3)
+    lidar.startScan()
     time.sleep(2)
     fig = plot.figure()
     subplot = plot.subplot(111, projection='polar')
-    axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
-                           cmap=plot.cm.Greys_r, lw=0)
+    # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
+    #                        cmap=plot.cm.Greys_r, lw=0)
     subplot.set_rmax(DMAX)
     subplot.grid(True)
     

@@ -59,6 +59,8 @@ class lidarMap:
             pass
 
     def getRange(self):
+        if self.len==0:
+            return 0
         return abs(self.fetchPointAtClosestAngle(0).angle - self.fetchPointAtClosestAngle(360).angle)
 
 
