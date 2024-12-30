@@ -22,13 +22,13 @@ def update_line(num, lidar, subplot):
     #subplot.set_offsets(offsets)
     intens = np.array([point.quality for point in scan])
     #subplot.set_array(intens)
-
+    print("render cycle", len(intens))
     return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 def run():
     lidar = Lidar()
     lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
-    lidar.setMotorPwm(1000)
+    lidar.setMotorPwm(200)
     
     lidar.getScanModes()
     print(lidar.getSampleRate())
@@ -57,7 +57,7 @@ def run():
     plot.show()
     
     lidar.stop()
-    lidar.setMotorPwm(0)
+    
     lidar.disconnect()
     
     print("the run is done")

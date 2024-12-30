@@ -14,12 +14,14 @@ class lidarMap:
         return self.getPoints()
 
     def addVal(self, point):
-        print("valHasBeenAdded", point)
+        #print("valHasBeenAdded", point)
 
 
-        self.len+=1
+        
         if point.quality==0:
             return
+
+        self.len+=1
 
 
         
@@ -40,7 +42,7 @@ class lidarMap:
 
 
     def fetchPointAtClosestAngle(self, angle):
-        if self.len==0:
+        if len(self.points)==0:
             return None
         return self.points[min([key for key, value in self.points.items()], key=lambda value: abs(value - angle))]
     
@@ -59,7 +61,7 @@ class lidarMap:
             pass
 
     def getRange(self):
-        if self.len==0:
+        if len(self.points)==0:
             return 0
         return abs(self.fetchPointAtClosestAngle(0).angle - self.fetchPointAtClosestAngle(360).angle)
 

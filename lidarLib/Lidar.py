@@ -14,7 +14,7 @@ class Lidar:
         self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
-        self.lastMap=None
+        self.lastMap=lidarMap(self)
         #self.eventLoop()
         
         self.capsuleType=None
@@ -96,7 +96,7 @@ class Lidar:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
                 #print("update working")
                 newData=self.receiveData(self.dataDiscriptor)
-                if not self.validatePackage(newData, printErrors=True):
+                if not self.validatePackage(newData, printErrors=False):
                     self.restartScan()
                     return
                 self.currentMap.addVal(lidarMeasurement(newData))
@@ -295,8 +295,9 @@ class Lidar:
         print("map swap attempted")
         self.lastMap=self.currentMap
         self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1)
-        print(len(self.currentMap.getPoints()),self.currentMap.len ,self.currentMap.mapID)
         print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID, self.lastMap.getRange())
+        print(len(self.currentMap.getPoints()),self.currentMap.len ,self.currentMap.mapID)
+        
         #print(self.currentMap.points==self.lastMap.points)
 
     def getCurrentMap(self):
