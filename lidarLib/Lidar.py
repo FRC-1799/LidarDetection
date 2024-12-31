@@ -43,18 +43,12 @@ class Lidar(RPLidar):
 
     def update(self):
         while True:
-            try:
-                for scan in self.iter_measurements(scan_type=0,max_buf_meas=500):
-                    if self.isDone:
-                        return
-                    self.currentMap.addVal(lidarReading(scan))
-            except Exception as e:
-                print("scan error caught", e)
-                
-                self.stop()
-                
-                self.start()
             
+            for scan in self.iter_measurements(scan_type=0,max_buf_meas=500):
+                if self.isDone:
+                    return
+                self.currentMap.addVal(lidarReading(scan))
+
 
         
 
