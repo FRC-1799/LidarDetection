@@ -43,10 +43,19 @@ class Lidar(RPLidar):
 
     def update(self):
         while True:
-            for scan in self.iter_measurements():
+            try:
+                for scan in self.iter_measurements(scan_type=0,max_buf_meas=500):
+                    if self.isDone:
+                        return
+                    self.currentMap.addVal(lidarReading(scan))
+            except Exception as e:
+                print("scan error caught", e)
                 
-                self.currentMap.addVal(lidarReading(scan))
+                self.stop()
+                
+                self.start()
             
+
         
 
 
@@ -55,6 +64,7 @@ class Lidar(RPLidar):
         
         
         if startThreaded:
+            self.isDone=False
             self.loop = threading.Thread(target=self.update, daemon=True)
             self.loop.start()
 
@@ -62,7 +72,7 @@ class Lidar(RPLidar):
     
 
     def stop(self):
-        self.loop._stop()
+        self.isDone=True
         super().stop()
 
     

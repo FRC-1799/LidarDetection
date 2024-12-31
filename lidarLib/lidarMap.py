@@ -14,14 +14,12 @@ class lidarMap:
         return self.getPoints()
 
     def addVal(self, point):
-        #print("valHasBeenAdded", point)
+        print("valHasBeenAdded", point)
 
-
-        
         if point.quality==0:
             return
 
-        self.len+=1
+        
 
 
         
@@ -37,6 +35,7 @@ class lidarMap:
         #     self.endFunction(self)
         #     isFinished=True
         #     return
+        self.len+=1
         self.points[point.angle]=point
         #self.thisFuncDoesNothing()
 

@@ -26,7 +26,7 @@ def update_line(num, lidar, subplot):
     return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 def run():
-    lidar = Lidar(Port="/dev/lidar1", Logging=False)
+    lidar = Lidar(Port="/dev/lidar1", Logging=True)
     
     
     print(lidar.info)
