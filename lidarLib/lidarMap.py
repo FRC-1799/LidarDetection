@@ -25,7 +25,7 @@ class lidarMap:
 
 
         
-        if point.start_flag:
+        if point.startFlag:
             self.hostLidar.mapIsDone()
             self.endFunction(self)
             return

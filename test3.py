@@ -26,15 +26,13 @@ def update_line(num, lidar, subplot):
     return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 def run():
-    lidar = Lidar()
-    lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
-    lidar.setMotorPwm(200)
+    lidar = Lidar(Port="/dev/lidar1", Logging=False)
     
-    lidar.getScanModes()
-    print(lidar.getSampleRate())
-    print(lidar.getScanModeTypical())
+    
+    print(lidar.info)
+    
     #lidar.startScanExpress(3)
-    lidar.startScan()
+    lidar.start(scan_type=0)
     time.sleep(2)
     fig = plot.figure()
     subplot = plot.subplot(111, projection='polar')
@@ -55,8 +53,6 @@ def run():
     # fig, partial(update_line, lidar=lidar, line=line),
     #frames=np.linspace(0, 2*np.pi, 128), blit=True)
     plot.show()
-    
-    lidar.stop()
     
     lidar.disconnect()
     
