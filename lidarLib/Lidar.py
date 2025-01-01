@@ -4,8 +4,9 @@ from lidarLib.pyrplidarSerial import PyRPlidarSerial
 from lidarLib.lidarProtocol import *
 import lidarLib.lidarProtocol
 from lidarLib.lidarMap import lidarMap
+from lidarLib.lidarMeasurment import lidarMeasurement
 import threading
-
+from lidarLib.translation import translation
 
 
 class Lidar:
@@ -23,6 +24,9 @@ class Lidar:
         self.isDone=False
         self.currentMotorPWM=0
         self.debugMode=debugMode
+
+        self.localTranslation=None
+        self.globalTranslation=None
         
 
     
@@ -113,18 +117,19 @@ class Lidar:
         capsule_current = None
         
         while not self.isDone:
+            print("update")
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
-                
+                print("data read")
                 data = self.receiveData(self.dataDiscriptor)
                 capsule_current = self.capsuleType(data)
                 
                 nodes = self.capsuleType._parse_capsule(capsule_prev, capsule_current)
                 for index, node in enumerate(nodes):
-                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), printFlag=self.debugMode)
+                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), printFlag=True)
 
                 capsule_prev = capsule_current
             else:
-                break
+                return
 
 
     def validatePackage(self, pack, printErrors=False):

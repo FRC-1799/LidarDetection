@@ -23,8 +23,8 @@ def run():
     lidar.getScanModes()
     print(lidar.getSampleRate())
     print(lidar.getScanModeTypical())
-    lidar.startScanExpress(3)
-    #lidar.startScan()
+    #lidar.startScanExpress(3)
+    lidar.startScan()
     time.sleep(2)
 
     # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
