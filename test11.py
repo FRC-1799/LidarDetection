@@ -17,7 +17,7 @@ scan_data = [0]*360
 
 try:
 #    print(lidar.get_info())
-    for scan in lidar.iter_measurements():
+    for scan in lidar.iter_measurements(scan_type=2):
         print(scan)
         # for (_, angle, distance) in scan:
         #     scan_data[min([359, floor(angle)])] = distance
