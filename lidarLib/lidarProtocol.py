@@ -210,6 +210,7 @@ class lidarMeasurement:
             self.quality = raw_bytes[0] >> 2
             self.angle = ((raw_bytes[1] >> 1) + (raw_bytes[2] << 7)) / 64.0
             self.distance = (raw_bytes[3] + (raw_bytes[4] << 8)) / 4.0
+            
         elif measurement_hq is not None:
             self.start_flag=True if measurement_hq.start_flag==0x1 else False
             self.quality=measurement_hq.quality

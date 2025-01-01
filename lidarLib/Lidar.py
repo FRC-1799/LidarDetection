@@ -119,7 +119,7 @@ class Lidar:
                 
                 nodes = self.capsuleType._parse_capsule(capsule_prev, capsule_current)
                 for index, node in enumerate(nodes):
-                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node))
+                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), printFlag=self.debugMode)
 
                 capsule_prev = capsule_current
             else:

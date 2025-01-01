@@ -18,13 +18,13 @@ IMAX = 20
 def run():
     lidar = Lidar(debugMode=True)
     lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
-    lidar.setMotorPwm(150)
+    lidar.setMotorPwm(500)
     
     lidar.getScanModes()
     print(lidar.getSampleRate())
     print(lidar.getScanModeTypical())
-    #lidar.startScanExpress(3)
-    lidar.startScan()
+    lidar.startScanExpress(3)
+    #lidar.startScan()
     time.sleep(2)
 
     # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
@@ -35,15 +35,15 @@ def run():
     #lidar.currentMap.printMap()
     #print(lidar.currentMap.points)
     #lidar.currentMap.thisFuncDoesNothing()
-    # renderer, pipe = initMachine()
+    renderer, pipe = initMachine()
     
-    # try:
-    #     while True:
-    #         pipe.send(lidar.lastMap)
-    #         time.sleep(0.1)
-    #         #print("data sent")
-    # except Exception as e:
-    #     print(e)
+    try:
+        while True:
+            pipe.send(lidar.lastMap)
+            time.sleep(0.1)
+            #print("data sent")
+    except Exception as e:
+        print(e)
     # ani = animation.FuncAnimation(
     # fig, partial(update_line, lidar=lidar, line=line),
     #frames=np.linspace(0, 2*np.pi, 128), blit=True)
