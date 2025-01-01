@@ -114,6 +114,7 @@ class Lidar:
         
         while not self.isDone:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
+                
                 data = self.receiveData(self.dataDiscriptor)
                 capsule_current = self.capsuleType(data)
                 
