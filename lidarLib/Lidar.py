@@ -10,7 +10,7 @@ import threading
 
 class Lidar:
 
-    def __init__(self):
+    def __init__(self, debugMode=False):
         self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
@@ -22,6 +22,7 @@ class Lidar:
         self.dataDiscriptor=None
         self.isDone=False
         self.currentMotorPWM=0
+        self.debugMode=debugMode
         
 
     
@@ -96,10 +97,10 @@ class Lidar:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
                 #print("update working")
                 newData=self.receiveData(self.dataDiscriptor)
-                if not self.validatePackage(newData, printErrors=False):
+                if not self.validatePackage(newData, printErrors=self.debugMode):
                     self.restartScan()
                     return
-                self.currentMap.addVal(lidarMeasurement(newData))
+                self.currentMap.addVal(lidarMeasurement(newData), printFlag=self.debugMode)
             else:
                 #print("break hit")
                 break
@@ -292,11 +293,13 @@ class Lidar:
 
     
     def mapIsDone(self):
-        print("map swap attempted")
+        
         self.lastMap=self.currentMap
         self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1)
-        print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID, self.lastMap.getRange())
-        print(len(self.currentMap.getPoints()),self.currentMap.len ,self.currentMap.mapID)
+        if self.debugMode:
+            print("map swap attempted")
+            print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID, self.lastMap.getRange())
+            print(len(self.currentMap.getPoints()),self.currentMap.len ,self.currentMap.mapID)
         
         #print(self.currentMap.points==self.lastMap.points)
 

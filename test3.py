@@ -5,30 +5,20 @@ import matplotlib.pyplot as plot
 import numpy as np
 import matplotlib.animation as animation
 from functools import partial
+import pickle
 import time
-
+from renderLib.renderMachine import initMachine
 PORT_NAME = '/dev/ttyUSB0'
 DMAX = 1600
 IMIN = 20
 IMAX = 20
 
-def update_line(num, lidar, subplot):
-    scan = lidar.lastMap.getPoints()
 
-    angles=np.array([point.angle for point in scan])
-    distances=np.array([point.distance for point in scan])
-    #offsets = np.array([[point.angle, point.distance] for point in scan])
-    #offsets=[scan[0].angle, scan[0].distance]
-    #subplot.set_offsets(offsets)
-    intens = np.array([point.quality for point in scan])
-    #subplot.set_array(intens)
-    print("render cycle", len(intens))
-    return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 def run():
-    lidar = Lidar()
+    lidar = Lidar(debugMode=True)
     lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
-    lidar.setMotorPwm(200)
+    lidar.setMotorPwm(150)
     
     lidar.getScanModes()
     print(lidar.getSampleRate())
@@ -36,25 +26,31 @@ def run():
     #lidar.startScanExpress(3)
     lidar.startScan()
     time.sleep(2)
-    fig = plot.figure()
-    subplot = plot.subplot(111, projection='polar')
+
     # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
     #                        cmap=plot.cm.Greys_r, lw=0)
-    subplot.set_rmax(DMAX)
-    subplot.grid(True)
+    
     
     time.sleep(1)
     #lidar.currentMap.printMap()
     #print(lidar.currentMap.points)
     #lidar.currentMap.thisFuncDoesNothing()
-
+    # renderer, pipe = initMachine()
     
-    anim=animation.FuncAnimation(fig, update_line,
-        fargs=(lidar, subplot), interval=50, save_count=50)
+    # try:
+    #     while True:
+    #         pipe.send(lidar.lastMap)
+    #         time.sleep(0.1)
+    #         #print("data sent")
+    # except Exception as e:
+    #     print(e)
     # ani = animation.FuncAnimation(
     # fig, partial(update_line, lidar=lidar, line=line),
     #frames=np.linspace(0, 2*np.pi, 128), blit=True)
-    plot.show()
+    # for i in range(10):
+    #     with open('data'+str(i)+'.pkl', 'wb') as file:
+    #         pickle.dump(lidar.lastMap, file)
+    #         time.sleep(2)
     
     lidar.stop()
     

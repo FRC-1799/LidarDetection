@@ -1,9 +1,9 @@
 class lidarMap:
-    def __init__(self, hostLidar, endFunction = lambda map:None, mapID=0):
+    def __init__(self, hostLidar, mapID=0):
         
         self.points={}
 
-        self.endFunction=endFunction
+        
         self.hostLidar=hostLidar
         self.isFinished=False
         self.mapID=mapID
@@ -12,9 +12,20 @@ class lidarMap:
 
     def __array__(self):
         return self.getPoints()
+    
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['hostLidar']
+        return state
+    
+    def __setstart__(self, state):
+        self.__dict__.update(state)
+        self.hostLidar=None
 
-    def addVal(self, point):
-        #print("valHasBeenAdded", point)
+
+    def addVal(self, point, printFlag=False):
+        if printFlag:
+            print("valHasBeenAdded", point)
 
 
         
@@ -27,7 +38,7 @@ class lidarMap:
         
         if point.start_flag:
             self.hostLidar.mapIsDone()
-            self.endFunction(self)
+           
             return
         
 
