@@ -274,6 +274,7 @@ class Lidar:
         self.sendCommand(RPLIDAR_CMD_SCAN)
         self.lidarSerial.receive_data(RPLIDAR_DESCRIPTOR_LEN)
     
+    @DeprecationWarning
     def startScanExpress(self, mode):
         
         self.sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
