@@ -1,8 +1,12 @@
 import cmath
+import time
+
 class lidarMeasurement:
 
     def __init__(self, raw_bytes=None, measurement_hq=None):
         
+        self.timeStamp=time.time()
+
         if raw_bytes is not None:
             self.start_flag = bool(raw_bytes[0] & 0x1)
             self.quality = raw_bytes[0] >> 2
@@ -22,7 +26,8 @@ class lidarMeasurement:
             "start_flag" : self.start_flag,
             "quality" : self.quality,
             "angle" : self.angle,
-            "distance" : self.distance
+            "distance" : self.distance,
+            "timestamp" : self.timeStamp
         }
         return str(data)
 
@@ -33,7 +38,7 @@ class lidarMeasurement:
         return self.distance
 
     def getX(self):
-        cmath.rect(self.distance, self.angle)[0]
+        cmath.rect(self.distance, self.angle).real
 
     def getY(self):
-        cmath.rect(self.distance, self.angle)[1]
+        cmath.rect(self.distance, self.angle).imag

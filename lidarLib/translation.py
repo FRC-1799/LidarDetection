@@ -5,12 +5,12 @@ class translation:
         self.r=r
         self.omega=omega
         self.rotation=rotation
-        self.x, self.y - cmath.rect(self.rotation, self.rotation)
-
+        self.x, self.y = cmath.rect(self.rotation, self.rotation)
+        print(cmath.rect(self.rotation, self.rotation))
     def __init__(self):
         self.r=0
         self.omega=0
-        self.roation=0
+        self.rotation=0
         self.x, self.y = 0,0
 
 

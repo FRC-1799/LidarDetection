@@ -26,37 +26,26 @@ class lidarMap:
 
 
     def addVal(self, point, translation: translation, printFlag=False):
-        translation.applyTranslation(point)
-        self.addVal(point, printFlag=printFlag)
-
-    def addVal(self, point, printFlag=False):
+        
         if printFlag:
             print("valHasBeenAdded", point)
 
-
-        
         if point.quality==0:
             return
 
-        self.len+=1
-
-
-        
+        if translation !=None:
+            translation.applyTranslation(point)
+             
         if point.start_flag:
             self.hostLidar.mapIsDone()
            
             return
         
-
-
-        # if self.pointIsPastLoop(point):
-        #     self.hostLidar.mapIsDone()
-        #     self.endFunction(self)
-        #     isFinished=True
-        #     return
+        self.len+=1
         self.points[point.angle]=point
-        #self.thisFuncDoesNothing()
 
+        
+    
 
     def fetchPointAtClosestAngle(self, angle):
         if len(self.points)==0:
