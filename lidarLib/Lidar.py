@@ -25,8 +25,9 @@ class Lidar:
         self.currentMotorPWM=0
         self.debugMode=debugMode
 
-        self.localTranslation=None
-        self.globalTranslation=None
+        self.localTranslation=translation()
+        self.globalTranslation=translation()
+        self.combinedTranslation=translation()
         
 
     
@@ -104,7 +105,7 @@ class Lidar:
                 if not self.validatePackage(newData, printErrors=self.debugMode):
                     self.restartScan()
                     return
-                self.currentMap.addVal(lidarMeasurement(newData), printFlag=self.debugMode)
+                self.currentMap.addVal(lidarMeasurement(newData), self.combinedTranslation, printFlag=self.debugMode)
             else:
                 #print("break hit")
                 break
@@ -125,7 +126,7 @@ class Lidar:
                 
                 nodes = self.capsuleType._parse_capsule(capsule_prev, capsule_current)
                 for index, node in enumerate(nodes):
-                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), printFlag=True)
+                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), self.combinedTranslation, printFlag=True)
 
                 capsule_prev = capsule_current
             else:
@@ -312,3 +313,10 @@ class Lidar:
     def getCurrentMap(self):
         return self.currentMap
 
+    def setCurrentLocalTranslation(self, translation):
+        self.localTranslation=translation
+        self.combinedTranslation=self.localTranslation.combineTranslation(self.globalTranslation)
+
+    def setCurrentGlobalTranslation(self, translation):
+        self.globalTranslation=translation
+        self.combinedTranslation=self.globalTranslation.combineTranslation(self.localTranslation)

@@ -1,3 +1,5 @@
+from lidarLib.translation import translation
+
 class lidarMap:
     def __init__(self, hostLidar, mapID=0):
         
@@ -22,6 +24,10 @@ class lidarMap:
         self.__dict__.update(state)
         self.hostLidar=None
 
+
+    def addVal(self, point, translation: translation, printFlag=False):
+        translation.applyTranslation(point)
+        self.addVal(point, printFlag=printFlag)
 
     def addVal(self, point, printFlag=False):
         if printFlag:
