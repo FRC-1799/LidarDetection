@@ -1,5 +1,6 @@
 import cmath
 import time
+from lidarLib.util import polarToX, polarToY
 
 class lidarMeasurement:
 
@@ -38,7 +39,7 @@ class lidarMeasurement:
         return self.distance
 
     def getX(self):
-        cmath.rect(self.distance, self.angle).real
+        return polarToX(self.distance, self.angle)
 
     def getY(self):
-        cmath.rect(self.distance, self.angle).imag
+        return polarToY(self.distance, self.angle)

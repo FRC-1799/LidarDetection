@@ -1,23 +1,26 @@
 import cmath
+from lidarLib.util import polarToCart
 class translation:
 
-    def __init__(self, r, omega, rotation):
+    def __init__(self, r, theta, rotation):
         self.r=r
-        self.omega=omega
+        self.theta=theta
         self.rotation=rotation
-        self.x, self.y = cmath.rect(self.rotation, self.rotation)
-        print(cmath.rect(self.rotation, self.rotation))
+        self.x, self.y = polarToCart(self.r, self.theta)
+        
     def __init__(self):
         self.r=0
-        self.omega=0
+        self.theta=0
         self.rotation=0
-        self.x, self.y = 0,0
+        self.x=0
+        self.y=0
+        
 
 
     def applyTranslation(self, lidarPoint):
         lidarPoint.angle=(lidarPoint.angle+self.rotation)%360
         
-        lidarPoint.distance, lidarPoint.angle = cmath.polar(lidarPoint.getX()+self.x, lidarPoint.getY()+self.y)
+        lidarPoint.distance, lidarPoint.angle = polarToCart(lidarPoint.getX()+self.x, lidarPoint.getY()+self.y)
 
 
     def combineTranslation(self, translation):
@@ -25,5 +28,5 @@ class translation:
 
 
 def translationFromCart(x, y, rotation):
-    r, omega = cmath.polar(x, y)
-    return translation(r, omega, rotation)
+    r, theta = polarToCart(x, y)
+    return translation(r, theta, rotation)
