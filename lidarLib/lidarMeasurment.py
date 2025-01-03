@@ -20,7 +20,14 @@ class lidarMeasurement:
             self.angle = ((measurement_hq.angle_z_q14*90)>>8)/64.0
             self.distance= (measurement_hq.dist_mm_q2)/4.0
 
-
+    @classmethod
+    def default(cls, start_flag, quality, angle, distance):
+        new = cls()
+        new.start_flag=start_flag
+        new.quality=quality
+        new.angle=angle
+        new.distance=distance
+        return new
                 
     def __str__(self):
         data = {

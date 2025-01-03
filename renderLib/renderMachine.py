@@ -6,8 +6,10 @@ from renderLib.renderPipeCap import renderPipeCap
 
 DMAX=4000
 
-def update_line(num, pipe, subplot):
+def update_line(num, pipe, subplot:plot.axis):
+    subplot.clear()
     scan = pipe.get()
+    #print(scan.mapID)
     if scan == None:
         return
     scan=scan.getPoints()
@@ -16,7 +18,7 @@ def update_line(num, pipe, subplot):
     #offsets = np.array([[point.angle, point.distance] for point in scan])
     #offsets=[scan[0].angle, scan[0].distance]
     #subplot.set_offsets(offsets)
-    intens = np.array([point.quality for point in scan])
+    intens = np.array([1 for point in scan])
     #subplot.set_array(intens)
     print("render cycle", len(intens))
     return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
@@ -29,7 +31,7 @@ def renderMachine(pipeCap):
     subplot.set_rmax(DMAX)
     subplot.grid(True)
     
-    anim=animation.FuncAnimation(fig, update_line,
+    anim=animation.FuncAnimation(fig, update_line, blit=False,
     fargs=(pipeCap, subplot), interval=50, save_count=50)
     
     plot.show()

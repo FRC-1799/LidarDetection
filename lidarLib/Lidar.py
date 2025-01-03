@@ -11,13 +11,13 @@ from lidarLib.translation import translation
 
 class Lidar:
 
-    def __init__(self, debugMode=False):
+    def __init__(self, debugMode=False, deadband=None):
         self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.lastMap=lidarMap(self)
         #self.eventLoop()
-        
+        self.deadband=deadband
         self.capsuleType=None
         self.loop = None
         self.dataDiscriptor=None
@@ -25,9 +25,11 @@ class Lidar:
         self.currentMotorPWM=0
         self.debugMode=debugMode
 
-        self.localTranslation=translation()
-        self.globalTranslation=translation()
-        self.combinedTranslation=translation()
+        self.localTranslation=translation.default()
+        self.globalTranslation=translation.default()
+        self.combinedTranslation=translation.default()
+
+        
         
 
     
@@ -303,10 +305,10 @@ class Lidar:
     def mapIsDone(self):
         
         self.lastMap=self.currentMap
-        self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1)
+        self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1, deadband=self.deadband, sensorThetaOffset=self.localTranslation.theta)
         if self.debugMode:
             print("map swap attempted")
-            print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID, self.lastMap.getRange())
+            print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID, self.lastMap.getRange(), self.lastMap.getHz(), self.lastMap.getPeriod())
             print(len(self.currentMap.getPoints()),self.currentMap.len ,self.currentMap.mapID)
         
         #print(self.currentMap.points==self.lastMap.points)
@@ -316,8 +318,14 @@ class Lidar:
 
     def setCurrentLocalTranslation(self, translation):
         self.localTranslation=translation
+        self.currentMap.setOffset(self.localTranslation.theta)
         self.combinedTranslation=self.localTranslation.combineTranslation(self.globalTranslation)
 
     def setCurrentGlobalTranslation(self, translation):
         self.globalTranslation=translation
         self.combinedTranslation=self.globalTranslation.combineTranslation(self.localTranslation)
+
+
+    def setDeadband(self, deadband):
+        self.deadband=deadband
+        self.currentMap.setDeadband(deadband)
