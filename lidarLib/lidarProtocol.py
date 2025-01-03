@@ -79,15 +79,15 @@ VBS_TARGET_BASE = [(0x1 << RPLIDAR_VARBITSCALE_X16_SRC_BIT),
 
 
 
-class PyRPlidarConnectionError(Exception):
+class RPlidarConnectionError(Exception):
     pass
 
-class PyRPlidarProtocolError(Exception):
+class RPlidarProtocolError(Exception):
     pass
 
 
 
-class PyRPlidarCommand:
+class RPlidarCommand:
 
     def __init__(self, cmd, payload=None):
         self.cmd = cmd
@@ -105,7 +105,7 @@ class PyRPlidarCommand:
         return chksum
 
 
-class PyRPlidarResponse:
+class RPlidarResponse:
     
     def __init__(self, raw_bytes):
         self.sync_byte1 = raw_bytes[0]
@@ -130,7 +130,7 @@ class PyRPlidarResponse:
 
 
 
-class PyRPlidarDeviceInfo:
+class RPlidarDeviceInfo:
     
     def __init__(self, raw_bytes):
         self.model = raw_bytes[0]
@@ -151,7 +151,7 @@ class PyRPlidarDeviceInfo:
         return str(data)
 
 
-class PyRPlidarHealth:
+class RPlidarHealth:
     
     def __init__(self, raw_bytes):
         self.status = raw_bytes[0]
@@ -165,7 +165,7 @@ class PyRPlidarHealth:
         return str(data)
 
 
-class PyRPlidarSamplerate:
+class RPlidarSamplerate:
     
     def __init__(self, raw_bytes):
         self.t_standard = raw_bytes[0] + (raw_bytes[1] << 8)
@@ -179,7 +179,7 @@ class PyRPlidarSamplerate:
         return str(data)
 
 
-class PyRPlidarScanMode:
+class RPlidarScanMode:
 
     def __init__(self, data_name, data_max_distance, data_us_per_sample, data_ans_type):
         self.us_per_sample = struct.unpack("<I", data_us_per_sample[4:8])[0]
@@ -200,7 +200,7 @@ class PyRPlidarScanMode:
 
 
 
-
+@DeprecationWarning
 class PyRPlidarMeasurementHQ:
     
     def __init__(self, syncBit, angle_q6, dist_q2):
@@ -217,7 +217,7 @@ class PyRPlidarMeasurementHQ:
 
 
 
-
+@DeprecationWarning
 class PyRPlidarCabin:
     
     def __init__(self, raw_bytes):
@@ -226,6 +226,7 @@ class PyRPlidarCabin:
         self.d_theta1 = (raw_bytes[4] & 0x0F) + ((raw_bytes[0] & 0x03) << 4)
         self.d_theta2 = (raw_bytes[4] >> 4) + ((raw_bytes[2] & 0x03) << 4)
 
+@DeprecationWarning
 class PyRPlidarScanCapsule:
     
     def __init__(self, raw_bytes):
@@ -290,13 +291,13 @@ class PyRPlidarScanCapsule:
 
 
 
-
+@DeprecationWarning
 class PyRPlidarDenseCabin:
     
     def __init__(self, raw_bytes):
         self.distance = (raw_bytes[0] << 8) + raw_bytes[1]
 
-
+@DeprecationWarning
 class PyRPlidarScanDenseCapsule:
 
     def __init__(self, raw_bytes):
@@ -349,7 +350,7 @@ class PyRPlidarScanDenseCapsule:
 
 
 
-
+@DeprecationWarning
 class PyRPlidarUltraCabin:
     
     def __init__(self, raw_bytes):
@@ -367,7 +368,7 @@ class PyRPlidarUltraCabin:
             "predict2" : hex(self.predict2),
         }
         return str(data)
-
+@DeprecationWarning
 class PyRPlidarScanUltraCapsule:
 
     def __init__(self, raw_bytes):
