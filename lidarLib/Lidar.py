@@ -43,7 +43,7 @@ class Lidar:
     def __exit__(self, exceptionType, exceptionValue, exceptionTraceback):
         self.disconnect()
 
-    def connect(self, port="/dev/ttyUSB0", baudrate=115200, timeout=3):
+    def connect(self, port="/dev/ttyUSB0", baudrate=115200, timeout=3)->None:
         self.lidarSerial = PyRPlidarSerial()
         self.lidarSerial.open(port, baudrate, timeout)
         
@@ -56,14 +56,14 @@ class Lidar:
 
 
 
-    def establishLoop(self, updateFunc,resetLoop=True):
+    def establishLoop(self, updateFunc:function,resetLoop=True)->None:
         self.update=updateFunc
         self.dataDiscriptor = self.receiveDiscriptor()
         if resetLoop:
             self.loop = threading.Thread(target=self.updateLoop, daemon=False)
             self.loop.start()
 
-    def disconnect(self, leaveRunning=False):
+    def disconnect(self, leaveRunning=False)->None:
         
         if self.lidarSerial is not None:
             self.isDone=True
@@ -75,12 +75,12 @@ class Lidar:
             self.lidarSerial = None
             print("PyRPlidar Info : device is disconnected")
 
-    def updateLoop(self):
+    def updateLoop(self)->None:
         while not self.isDone:
             self.update()
             sleep(0.001)
             
-    def restartScan(self):
+    def restartScan(self)->None:
         self.stop()
         #self.setMotorPwm(0)
         
@@ -92,12 +92,12 @@ class Lidar:
         
 
 
-    def update(self):
+    def update(self)->None:
         
         raise PyRPlidarProtocolError("Update was called without a valid connection established, this may because a user tried to call it")
 
 
-    def standardUpdate(self):
+    def standardUpdate(self)->None:
         
         while not self.isDone:
             #print(self.lidarSerial.bufferSize())
@@ -114,7 +114,7 @@ class Lidar:
         
         #print("thingy")
 
-    def capsuleUpdate(self):
+    def capsuleUpdate(self)->None:
         data = self.receiveData(self.dataDiscriptor)
         capsule_prev = self.capsuleType(data)
         capsule_current = None
@@ -135,7 +135,7 @@ class Lidar:
                 return
 
 
-    def validatePackage(self, pack, printErrors=False):
+    def validatePackage(self, pack:bytes, printErrors=False)->bool:
         startFlag = bool(pack[0] & 0x1)
         quality = pack[0] >> 2
         angle = ((pack[1] >> 1) + (pack[2] << 7)) / 64.0
@@ -170,13 +170,13 @@ class Lidar:
         
 
 
-    def sendCommand(self, cmd, payload=None):
+    def sendCommand(self, cmd:bytes, payload=None)->None:
         if self.lidarSerial == None:
             raise PyRPlidarConnectionError("PyRPlidar Error : device is not connected")
 
         self.lidarSerial.send_data(PyRPlidarCommand(cmd, payload).raw_bytes)
 
-    def receiveDiscriptor(self):
+    def receiveDiscriptor(self)->PyRPlidarResponse:
         if self.lidarSerial == None:
             raise PyRPlidarConnectionError("PyRPlidar Error : device is not connected")
         
@@ -186,7 +186,7 @@ class Lidar:
             raise PyRPlidarProtocolError("PyRPlidar Error : sync bytes are mismatched", hex(discriptor.sync_byte1), hex(discriptor.sync_byte2))
         return discriptor
 
-    def receiveData(self, discriptor):
+    def receiveData(self, discriptor:PyRPlidarResponse)->bytes:
         
         if self.lidarSerial == None:
             raise PyRPlidarConnectionError("PyRPlidar Error : device is not connected")
@@ -198,13 +198,15 @@ class Lidar:
 
 
 
-    def stop(self):
+    def stop(self)->None:
         self.sendCommand(RPLIDAR_CMD_STOP)
 
-    def reset(self):
+    def reset(self)->None:
         self.sendCommand(RPLIDAR_CMD_RESET)
 
-    def setMotorPwm(self, pwm, overrideInternalValue=True):
+    def setMotorPwm(self, pwm:int, overrideInternalValue=True)->None:
+        if pwm<0 or pwm>RPLIDAR_MAX_MOTOR_PWM:
+            raise ValueError("lidar pwm was set to a value not within the range: ",pwm)
         self.lidarSerial.set_dtr(False)
         self.sendCommand(RPLIDAR_CMD_SET_MOTOR_PWM, struct.pack("<H", pwm))
         if overrideInternalValue:
@@ -212,41 +214,41 @@ class Lidar:
     
     
 
-    def getInfo(self):
+    def getInfo(self)->PyRPlidarDeviceInfo:
         self.sendCommand(RPLIDAR_CMD_GET_INFO)
         discriptor = self.receiveDiscriptor()
         data = self.receiveData(discriptor)
         return PyRPlidarDeviceInfo(data)
 
-    def getHealth(self):
+    def getHealth(self)->PyRPlidarHealth:
         self.sendCommand(RPLIDAR_CMD_GET_HEALTH)
         discriptor = self.receiveDiscriptor()
         data = self.receiveData(discriptor)
         return PyRPlidarHealth(data)
 
-    def getSampleRate(self):
+    def getSampleRate(self)->PyRPlidarSamplerate:
         self.sendCommand(RPLIDAR_CMD_GET_SAMPLERATE)
         discriptor = self.receiveDiscriptor()
         data = self.receiveData(discriptor)
         return PyRPlidarSamplerate(data)
 
-    def getLidarConf(self, payload):
+    def getLidarConf(self, payload:struct)->bytes:
         self.sendCommand(RPLIDAR_CMD_GET_LIDAR_CONF, payload)
         discriptor = self.receiveDiscriptor()
         data = self.receiveData(discriptor)
         return data
 
-    def get_scan_mode_count(self):
+    def get_scan_mode_count(self)->int:
         data = self.getLidarConf(struct.pack("<I", RPLIDAR_CONF_SCAN_MODE_COUNT))
         count = struct.unpack("<H", data[4:6])[0]
         return count
 
-    def getScanModeTypical(self):
+    def getScanModeTypical(self)->int:
         data = self.getLidarConf(struct.pack("<I", RPLIDAR_CONF_SCAN_MODE_TYPICAL))
         typical_mode = struct.unpack("<H", data[4:6])[0]
         return typical_mode
 
-    def getScanModes(self):
+    def getScanModes(self)->list[bytes]:
         
         scan_modes = []
         scan_mode_count = self.get_scan_mode_count()
@@ -263,7 +265,7 @@ class Lidar:
         return scan_modes
 
 
-    def startScan(self):
+    def startScan(self)->None:
         
         self.sendCommand(RPLIDAR_CMD_SCAN)
         #self.setMotorPwm(self.currentMotorPWM)
@@ -272,12 +274,12 @@ class Lidar:
 
 
 
-    def startRawScan(self):
+    def startRawScan(self)->None:
         self.sendCommand(RPLIDAR_CMD_SCAN)
         self.lidarSerial.receive_data(RPLIDAR_DESCRIPTOR_LEN)
     
     @DeprecationWarning
-    def startScanExpress(self, mode):
+    def startScanExpress(self, mode:int):
         
         self.sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
         self.establishLoop(self.capsuleUpdate)
@@ -297,12 +299,12 @@ class Lidar:
         
 
     
-    def forceScan(self):
+    def forceScan(self)->None:
         self.sendCommand(RPLIDAR_CMD_FORCE_SCAN)
         self.establishLoop(self.standardUpdate)
 
     
-    def mapIsDone(self):
+    def mapIsDone(self)->None:
         
         self.lastMap=self.currentMap
         self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1, deadband=self.deadband, sensorThetaOffset=self.localTranslation.theta)
@@ -313,19 +315,19 @@ class Lidar:
         
         #print(self.currentMap.points==self.lastMap.points)
 
-    def getCurrentMap(self):
+    def getCurrentMap(self)->lidarMap:
         return self.currentMap
 
-    def setCurrentLocalTranslation(self, translation):
+    def setCurrentLocalTranslation(self, translation:translation)->None:
         self.localTranslation=translation
         self.currentMap.setOffset(self.localTranslation.theta)
         self.combinedTranslation=self.localTranslation.combineTranslation(self.globalTranslation)
 
-    def setCurrentGlobalTranslation(self, translation):
+    def setCurrentGlobalTranslation(self, translation:translation)->None:
         self.globalTranslation=translation
         self.combinedTranslation=self.globalTranslation.combineTranslation(self.localTranslation)
 
 
-    def setDeadband(self, deadband):
+    def setDeadband(self, deadband:list[int])->None:
         self.deadband=deadband
         self.currentMap.setDeadband(deadband)

@@ -1,11 +1,13 @@
 from multiprocessing.connection import Connection
 
+from lidarLib import lidarMap
+
 class renderPipeCap:
     def __init__(self, pipe:Connection):
         self.pipe=pipe
         self.mostRecentVal=None
 
-    def get(self):
+    def get(self)->lidarMap:
         
         while self.pipe.poll():
         
@@ -15,7 +17,7 @@ class renderPipeCap:
         return self.mostRecentVal
 
         
-    def send(self, sendable):
+    def send(self, sendable:lidarMap)->None:
 
         
         self.pipe.send(sendable)

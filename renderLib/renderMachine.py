@@ -1,3 +1,4 @@
+from multiprocessing.connection import Connection
 import matplotlib.pyplot as plot
 import matplotlib.animation as animation
 import numpy as np
@@ -6,7 +7,7 @@ from renderLib.renderPipeCap import renderPipeCap
 
 DMAX=4000
 
-def update_line(num, pipe, subplot:plot.axis):
+def update_line(num, pipe:renderPipeCap, subplot:plot.axis)->plot.axis:
     subplot.clear()
     scan = pipe.get()
     #print(scan.mapID)
@@ -24,7 +25,7 @@ def update_line(num, pipe, subplot:plot.axis):
     return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 
-def renderMachine(pipeCap):
+def renderMachine(pipeCap:renderPipeCap)->none:
     
     fig = plot.figure()
     subplot = plot.subplot(111, projection='polar')
@@ -39,7 +40,7 @@ def renderMachine(pipeCap):
     
 
 
-def initMachine():
+def initMachine()->tuple[Process, Connection]:
     returnPipe, machinePipe = Pipe(duplex=True)
     returnPipe=renderPipeCap(returnPipe)
     machinePipe=renderPipeCap(machinePipe)

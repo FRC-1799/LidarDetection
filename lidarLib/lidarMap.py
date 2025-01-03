@@ -1,7 +1,9 @@
+from lidarLib import lidarMeasurment
+from lidarLib.Lidar import Lidar
 from lidarLib.translation import translation
 
 class lidarMap:
-    def __init__(self, hostLidar, mapID=0, deadband=None, sensorThetaOffset=0):
+    def __init__(self, hostLidar:Lidar, mapID=0, deadband=None, sensorThetaOffset=0):
         
         self.points={}
         self.deadband=deadband
@@ -28,7 +30,7 @@ class lidarMap:
         self.hostLidar=None
 
 
-    def addVal(self, point, translation: translation, printFlag=False):
+    def addVal(self, point:lidarMeasurment, translation: translation, printFlag=False)->None:
         
         if self.startTime==None:
             self.startTime=point.timeStamp
@@ -64,48 +66,48 @@ class lidarMap:
         
     
 
-    def fetchPointAtClosestAngle(self, angle):
+    def fetchPointAtClosestAngle(self, angle:float)->lidarMeasurment:
         if len(self.points)==0:
             return None
         return self.points[min([key for key, value in self.points.items()], key=lambda value: abs(value - angle))]
     
-    def getDistanceBetweeClosestAngle(self, angle):
+    def getDistanceBetweeClosestAngle(self, angle:float)->float:
         return abs(self.fetchPointAtClosestAngle(angle).angle-angle)
     
-    def getPoints(self):
+    def getPoints(self)->list[lidarMeasurment]:
         return list(self.points.values())
     
 
-    def printMap(self):
+    def printMap(self)->None:
         print("current map:")
         #self.thisFuncDoesNothing()
         for point in self.getPoints():
             print(point)
             pass
 
-    def getRange(self):
+    def getRange(self)->float:
         if len(self.points)==0:
             return 0
         return abs(self.fetchPointAtClosestAngle(0).angle - self.fetchPointAtClosestAngle(180).angle)*2
     
-    def getPeriod(self):
+    def getPeriod(self)->float:
         if self.startTime and self.endTime:
             return self.endTime-self.startTime
         print(self.startTime, self.endTime)
         return 0
-    def getHz(self):
+    def getHz(self)->float:
         if self.startTime and self.endTime:
             return 1/self.getPeriod()
         return 0
 
 
-    def setOffset(self, theta):
+    def setOffset(self, theta:float)->None:
         if theta>=0 and theta<360:
             self.sensorThetaOffset=theta
         
         else:
             raise ValueError("attempted to set a sensor offset that is not a degree value: ", theta)
         
-    def setDeadband(self, deadband):
+    def setDeadband(self, deadband:list)->None:
         self.deadband=deadband
         self.deadbandRaps= deadband != None and deadband[0]>deadband[1]

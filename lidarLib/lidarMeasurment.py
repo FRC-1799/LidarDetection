@@ -21,7 +21,7 @@ class lidarMeasurement:
             self.distance= (measurement_hq.dist_mm_q2)/4.0
 
     @classmethod
-    def default(cls, start_flag, quality, angle, distance):
+    def default(cls, start_flag:bool, quality:int, angle:float, distance:float)->lidarMeasurement:
         new = cls()
         new.start_flag=start_flag
         new.quality=quality
@@ -39,14 +39,14 @@ class lidarMeasurement:
         }
         return str(data)
 
-    def getAngle(self):
+    def getAngle(self)->float:
         return self.angle
 
-    def getDistance(self):
+    def getDistance(self)->float:
         return self.distance
 
-    def getX(self):
+    def getX(self)->float:
         return polarToX(self.distance, self.angle)
 
-    def getY(self):
+    def getY(self)->float:
         return polarToY(self.distance, self.angle)
