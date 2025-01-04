@@ -2,6 +2,8 @@ import struct
 import codecs
 import math
 
+from numpy import byte
+
 
 RPLIDAR_SYNC_BYTE1 = b'\xA5'
 RPLIDAR_SYNC_BYTE2 = b'\x5A'
@@ -88,8 +90,9 @@ class RPlidarProtocolError(Exception):
 
 
 class RPlidarCommand:
-
-    def __init__(self, cmd, payload=None):
+    """class to encapsulate a command sent to the lidar"""
+    def __init__(self, cmd:byte, payload=None):
+        """Creates a rplidar command of type cmd. payload will be sent if set for commands that require extra information """
         self.cmd = cmd
         self.payload = payload
         self.raw_bytes = RPLIDAR_SYNC_BYTE1 + cmd
@@ -97,23 +100,26 @@ class RPlidarCommand:
         if payload is not None:
             size = struct.pack('B', len(payload))
             self.raw_bytes += size + payload
-            self.raw_bytes += struct.pack('B', self.get_checksum(self.raw_bytes))
+            self.raw_bytes += struct.pack('B', self.getChecksum(self.raw_bytes))
 
-    def get_checksum(self, data):
+    def getChecksum(self, data:bytes):
+        """returns the checksum of the packet entered"""
         chksum = 0
         for value in data: chksum ^= value
         return chksum
 
 
 class RPlidarResponse:
+    """Class to define scan metadata information returned by the lidar"""
     
-    def __init__(self, raw_bytes):
-        self.sync_byte1 = raw_bytes[0]
-        self.sync_byte2 = raw_bytes[1]
-        size_q30_length_type = struct.unpack("<L", raw_bytes[2:6])[0]
+    def __init__(self, rawBytes:bytes):
+        """creates a rplidarResponce from the raw bytes returned by the lidar"""
+        self.sync_byte1 = rawBytes[0]
+        self.sync_byte2 = rawBytes[1]
+        size_q30_length_type = struct.unpack("<L", rawBytes[2:6])[0]
         self.data_length = size_q30_length_type & 0x3FFFFFFF
         self.send_mode = size_q30_length_type >> 30
-        self.data_type = raw_bytes[6]
+        self.data_type = rawBytes[6]
 
     def __str__(self):
         data = {
@@ -131,13 +137,14 @@ class RPlidarResponse:
 
 
 class RPlidarDeviceInfo:
-    
-    def __init__(self, raw_bytes):
-        self.model = raw_bytes[0]
-        self.firmware_minor = raw_bytes[1]
-        self.firmware_major = raw_bytes[2]
-        self.hardware = raw_bytes[3]
-        self.serialnumber = codecs.encode(raw_bytes[4:], 'hex').upper()
+    """Class to handle and store device information given by the lidar"""
+    def __init__(self, rawBytes:bytes):
+        """creates device info object from the raw bytes returned by the lidar"""
+        self.model = rawBytes[0]
+        self.firmware_minor = rawBytes[1]
+        self.firmware_major = rawBytes[2]
+        self.hardware = rawBytes[3]
+        self.serialnumber = codecs.encode(rawBytes[4:], 'hex').upper()
         self.serialnumber = codecs.decode(self.serialnumber, 'ascii')
 
     def __str__(self):
@@ -152,10 +159,11 @@ class RPlidarDeviceInfo:
 
 
 class RPlidarHealth:
-    
-    def __init__(self, raw_bytes):
-        self.status = raw_bytes[0]
-        self.error_code = (raw_bytes[1] << 8) + raw_bytes[2]
+    """class to handle and store health information given by the lidar"""
+    def __init__(self, rawbytes:bytes):
+        """creates a lidar health object from the raw byte package returned by thge lidar"""
+        self.status = rawbytes[0]
+        self.error_code = (rawbytes[1] << 8) + rawbytes[2]
 
     def __str__(self):
         data = {
@@ -166,10 +174,11 @@ class RPlidarHealth:
 
 
 class RPlidarSamplerate:
-    
-    def __init__(self, raw_bytes):
-        self.t_standard = raw_bytes[0] + (raw_bytes[1] << 8)
-        self.t_express = raw_bytes[2] + (raw_bytes[3] << 8)
+    """Class to handle and store samplerate information given by the lidar"""
+    def __init__(self, rawBytes:bytes):
+        """creates a lidar samplerate object from the raw byte package returned by thge lidar"""
+        self.t_standard = rawBytes[0] + (rawBytes[1] << 8)
+        self.t_express = rawBytes[2] + (rawBytes[3] << 8)
     
     def __str__(self):
         data = {
@@ -180,19 +189,20 @@ class RPlidarSamplerate:
 
 
 class RPlidarScanMode:
-
-    def __init__(self, data_name, data_max_distance, data_us_per_sample, data_ans_type):
-        self.us_per_sample = struct.unpack("<I", data_us_per_sample[4:8])[0]
-        self.max_distance = struct.unpack("<I", data_max_distance[4:8])[0]
-        self.ans_type = struct.unpack("<B", data_ans_type[4:5])[0]
-        self.name = codecs.decode(data_name[4:-1], 'ascii')
+    """Class to handle and store a scan mode given by the lidar"""
+    def __init__(self, dataName:bytes, dataMaxDistance:bytes, dataUsPerSample:bytes, dataAnsType:bytes):
+        """Creates a scan mode using the byte packs returned by the lidar"""
+        self.usPerSample = struct.unpack("<I", dataUsPerSample[4:8])[0]
+        self.maxDistance = struct.unpack("<I", dataMaxDistance[4:8])[0]
+        self.ansType = struct.unpack("<B", dataAnsType[4:5])[0]
+        self.name = codecs.decode(dataName[4:-1], 'ascii')
     
     def __str__(self):
         data = {
             "name" : self.name,
-            "max_distance" : self.max_distance,
-            "us_per_sample" : self.us_per_sample,
-            "ans_type" : RPLIDAR_ANS_TYPE[self.ans_type]
+            "max_distance" : self.maxDistance,
+            "us_per_sample" : self.usPerSample,
+            "ans_type" : RPLIDAR_ANS_TYPE[self.ansType]
         }
         return str(data)
 
