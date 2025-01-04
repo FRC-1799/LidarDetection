@@ -25,7 +25,7 @@ class translation:
         lidarPoint.distance, lidarPoint.angle = cartToPolar(lidarPoint.getX()+self.x, lidarPoint.getY()+self.y)
 
 
-    def combineTranslation(self, translation:translation)->translation:
+    def combineTranslation(self, translation:"translation")->"translation":
         """Combines to translations. the composit tranlsation will be returned"""
         return translationFromCart(self.x+translation.x, self.y+translation.y, (self.rotation+translation.rotation)%360)
 

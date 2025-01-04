@@ -24,7 +24,7 @@ class lidarMeasurement:
             self.distance= (measurement_hq.dist_mm_q2)/4.0
 
     @classmethod
-    def default(cls, start_flag:bool, quality:int, angle:float, distance:float)->lidarMeasurement:
+    def default(cls, start_flag:bool, quality:int, angle:float, distance:float)->"lidarMeasurement":
         """initalizes a lidarMeasurment using the values specified. this method is only intended for debugging perpouses. For creating measurments from a lidar use the standard constructer"""
         new = cls()
         new.start_flag=start_flag

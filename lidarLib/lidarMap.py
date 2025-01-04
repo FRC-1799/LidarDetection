@@ -1,12 +1,12 @@
 from lidarLib import lidarMeasurment
-from lidarLib.Lidar import Lidar
+import lidarLib.Lidar
 from lidarLib.translation import translation
 
 class lidarMap:
     """
         Class for handling a full 360 scan of lidar data
     """
-    def __init__(self, hostLidar:Lidar, mapID=0, deadband=None, sensorThetaOffset=0):
+    def __init__(self, hostLidar:"Lidar.Lidar", mapID=0, deadband=None, sensorThetaOffset=0):
         """
             Initalizes a lidarMap scan
             host lidar should be set to the lidar object responcable for populating the map. 

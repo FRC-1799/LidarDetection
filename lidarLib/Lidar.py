@@ -1,12 +1,13 @@
 
 from time import sleep
-from lidarLib.pyrplidarSerial import RPlidarSerial
+from lidarLib.rplidarSerial import RPlidarSerial
 from lidarLib.lidarProtocol import *
 import lidarLib.lidarProtocol
 from lidarLib.lidarMap import lidarMap
 from lidarLib.lidarMeasurment import lidarMeasurement
 import threading
 from lidarLib.translation import translation
+from typing import Callable
 
 
 class Lidar:
@@ -58,7 +59,7 @@ class Lidar:
 
 
 
-    def __establishLoop(self, updateFunc:function,resetLoop=True)->None:
+    def __establishLoop(self, updateFunc:Callable,resetLoop=True)->None:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
             Establishes the update loop thread as well as fetching a scan descriptor
