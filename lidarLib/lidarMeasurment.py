@@ -1,6 +1,6 @@
 import cmath
 import time
-from lidarLib.util import polarToX, polarToY
+from lidarLib.util import polarToCart, polarToX, polarToY
 
 class lidarMeasurement:
     """Class to handle a single lidar measurment, qoordinates are normaly stored in polar but may be gotten in cartisian form using the getX, getY, and getCat methods"""
@@ -61,4 +61,4 @@ class lidarMeasurement:
     
     def getCart(self)->tuple[float, float]:
         """returns the x and y of the measurment as a tuple. This value is not directly stored and is instead calculated whenever the function is called """
-        return self.polarToCart(self.distance, self.angle)
+        return polarToCart(self.distance, self.angle)
