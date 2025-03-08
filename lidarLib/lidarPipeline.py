@@ -1,7 +1,10 @@
+from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 
-from lidarLib import lidarMap
+from lidarLib import lidarManager, lidarMap
 from enum import Enum
+
+from lidarLib.translation import translation
 
 
 class lidarPipeline:
@@ -123,3 +126,22 @@ class dataPacket():
 
 class quitPacket:
     pass
+
+
+def makePipedLidar(args:list, lidarTranslation:translation)->tuple[Process, Connection]:
+    """
+        Creates a seperate prosses that handles all rendering and can be updated via a pipe(connection)
+        returns a tuple with the first argument being the process, this can be use cancle the process but the primary use is to be saved so the renderer doesnt get collected
+        the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodicly so they can be rendered. 
+        WARNING all code that deals with the pipe should be surrounded by a try except block as the pipe will start to throw errors whenever the user closes the render machine.
+    """
+    returnPipe, lidarPipe = Pipe(duplex=True)
+    returnPipe=lidarPipe(returnPipe)
+    lidarPipe=lidarPipe(lidarPipe)
+    process= Process(target=lidarManager, args=(lidarPipe, args, translation))
+    process.start()
+
+
+    return process, returnPipe
+
+    
