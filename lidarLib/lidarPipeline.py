@@ -110,7 +110,8 @@ class commandPacket:
 class dataPacketType(Enum):
     map = 0
     translation = 1
-    options:list[int] = [map, translation]
+    quitWarning = 2
+    options:list[int] = [map, translation, quitWarning]
 
 class dataPacket():
     def __init__(self, type:int, data):

@@ -57,7 +57,8 @@ class Lidar:
             raise ConnectionError("could not find lidar unit")
         
 
-
+    def isRunning(self):
+        return self.loop.is_alive()
 
     def __establishLoop(self, updateFunc:Callable,resetLoop=True)->None:
         """
