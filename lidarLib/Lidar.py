@@ -68,7 +68,7 @@ class Lidar:
         self.__update=updateFunc
         self.dataDiscriptor = self.__receiveDiscriptor()
         if resetLoop:
-            self.loop = threading.Thread(target=self.__updateLoop, daemon=False)
+            self.loop = threading.Thread(target=self.__updateLoop, daemon=True)
             self.loop.start()
 
     def disconnect(self, leaveRunning=False)->None:
