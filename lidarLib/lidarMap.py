@@ -31,9 +31,14 @@ class lidarMap:
         return self.getPoints()
     
     def __getstate__(self):
+        
         state = self.__dict__.copy()
-        del state['hostLidar']
+        
+        if state.get('hostLidar'):
+            del state['hostLidar']
+        
         return state
+        
     
     def __setstart__(self, state):
         self.__dict__.update(state)

@@ -30,6 +30,7 @@ class Lidar:
         self.localTranslation=translation.default()
         self.globalTranslation=translation.default()
         self.combinedTranslation=translation.default()
+        
 
         
         
@@ -58,7 +59,7 @@ class Lidar:
         
 
     def isRunning(self):
-        return self.loop.is_alive()
+        return self.loop and self.loop.is_alive()
 
     def __establishLoop(self, updateFunc:Callable,resetLoop=True)->None:
         """
@@ -301,7 +302,7 @@ class Lidar:
 
     def getScanModeTypical(self)->int:
         """Fetches and returns the best scan mode fot the connected lidar"""
-        data = self.__getLidarConf(struct.pack("<I", RPLIDAR_CONF_SCAN_MODE_TYPICAL))
+        data = self.__getLidarConf(struct.pack("<I", PLIDAR_CONF_SCAN_MODE_TYPICAL))
         typical_mode = struct.unpack("<H", data[4:6])[0]
         return typical_mode
 
@@ -343,6 +344,7 @@ class Lidar:
         self.__sendCommand(RPLIDAR_CMD_SCAN)
         self.lidarSerial.receiveData(RPLIDAR_DESCRIPTOR_LEN)
     
+
     @DeprecationWarning
     def startScanExpress(self, mode:int):
         
@@ -360,7 +362,8 @@ class Lidar:
         
 
             
-
+    def isConnected(self)->bool:
+        return self.lidarSerial and self.lidarSerial.isOpen()
         
 
     

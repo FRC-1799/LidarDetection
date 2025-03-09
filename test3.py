@@ -10,6 +10,7 @@ import pickle
 import time
 from lidarLib.translation import translation
 from renderLib.renderMachine import initMachine
+from renderLib.renderPipeCap import renderPipeCap
 PORT_NAME = '/dev/ttyUSB0'
 DMAX = 1600
 IMIN = 20
@@ -39,13 +40,9 @@ def run():
     #lidar.currentMap.thisFuncDoesNothing()
     renderer, pipe = initMachine()
     
-    try:
-        while True:
-            pipe.send(lidar.lastMap)
-            time.sleep(0.1)
-            #print("data sent", lidar.lastMap.mapID)
-    except Exception as e:
-        print(e)
+    while pipe.isConnected():
+        pipe.send(lidar.lastMap)
+        time.sleep(0.1)
     # ani = animation.FuncAnimation(
     # fig, partial(update_line, lidar=lidar, line=line),
     #frames=np.linspace(0, 2*np.pi, 128), blit=True)

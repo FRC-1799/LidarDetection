@@ -9,6 +9,7 @@ class renderPipeCap:
         self.pipe=pipe
         self.mostRecentVal=None
 
+
     def _get(self)->lidarMap:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
@@ -17,7 +18,10 @@ class renderPipeCap:
         while self.pipe.poll():
         
             #print("data receved")
-            self.mostRecentVal = self.pipe.recv()
+            temp = self.pipe.recv()
+                
+            if temp.__class__ !=ping:    
+                self.mostRecentVal = temp
         #print("data updated", self.mostRecentVal.mapID)
         return self.mostRecentVal
 
@@ -26,3 +30,16 @@ class renderPipeCap:
         """Sends the inputed lidar map to the other side of the pipe(aka the render machinel)"""
         
         self.pipe.send(sendable)
+
+    def isConnected(self)->bool:
+        try:
+            self.pipe.send(ping())
+            return True
+        except EOFError:
+            return False
+    
+    def close(self):
+        self.pipe.close()
+
+class ping:
+    pass

@@ -48,6 +48,8 @@ def renderMachine(pipeCap:renderPipeCap)->None:
     fargs=(pipeCap, subplot), interval=50, save_count=50)
     
     plot.show()
+
+   
     
     
 
