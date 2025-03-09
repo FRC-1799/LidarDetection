@@ -4,11 +4,13 @@ from matplotlib.axis import Axis
 import matplotlib.animation as animation
 import numpy as np
 from multiprocessing import Process, Pipe
+from lidarHitboxingMap import lidarHitboxMap
 from renderLib.renderPipeCap import renderPipeCap
+from constants import constants
 
 DMAX=4000
 
-def updateLine(num, pipe:renderPipeCap, subplot:Axis)->Axis:
+def updateLinePolar(num, pipe:renderPipeCap, subplot:Axis)->Axis:
     """
         updates the subplot using data gained from the pipe
         pipe should be the read end of a renderPipe cap thats partner is consistently supplied with up to date lidar maps
@@ -26,14 +28,15 @@ def updateLine(num, pipe:renderPipeCap, subplot:Axis)->Axis:
     distances=np.array([point.distance for point in scan])
     #offsets = np.array([[point.angle, point.distance] for point in scan])
     #offsets=[scan[0].angle, scan[0].distance]
-    #subplot.set_offsets(offsets)
+    #subplot.set_offsets(offsets)pass
+
     intens = np.array([1 for point in scan])
     #subplot.set_array(intens)
     print("render cycle", len(intens))
     return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 
-def renderMachine(pipeCap:renderPipeCap)->None:
+def polarRenderMachine(pipeCap:renderPipeCap)->None:
     """
         Initalizes a render and animation and displays it. 
         For preformance reasons this function should be set up on its own process(automaticly done in the initMachine function) so its slowness can not effect the data gatherers
@@ -44,17 +47,46 @@ def renderMachine(pipeCap:renderPipeCap)->None:
     subplot.set_rmax(DMAX)
     subplot.grid(True)
     
-    anim=animation.FuncAnimation(fig, updateLine, blit=False,
+    anim=animation.FuncAnimation(fig, updateLinePolar, blit=False,
     fargs=(pipeCap, subplot), interval=50, save_count=50)
     
     plot.show()
 
+
+def cartRenderMachine(pipeCap:renderPipeCap)->None:
+    fig = plot.figure()
+    subplot = plot.subplot(constants.mapWidthMeters*constants.mapNodeSizeMeters,constants.mapHeightMeters*constants.mapNodeSizeMeters, 0, projection='rectilinear')
+    subplot.grid(True)
+    
+    anim=animation.FuncAnimation(fig, updateLineCart, blit=False,
+    fargs=(pipeCap, subplot), interval=50, save_count=50)
+    
+    plot.show()
+
+
+
+def updateLineCart(pipeCap:renderPipeCap, subplot:Axis):
+    subplot.clear()
+    scan:lidarHitboxMap = pipeCap._get()
+    #print(scan.mapID)
+    if scan == None:
+        return
+    scan=scan.getAs1DList()
+    xvals=np.array([point.x for point in scan])
+    yVals=np.array([point.y for point in scan])
+    #offsets = np.array([[point.angle, point.distance] for point in scan])
+    #offsets=[scan[0].angle, scan[0].distance]
+    #subplot.set_offsets(offsets)
+    intens = np.array([1 for point in scan])
+    #subplot.set_array(intens)
+    print("render cycle", len(intens))
+    return subplot.scatter(xvals, yVals, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
    
     
     
 
 
-def initMachine()->tuple[Process, Connection]:
+def initMachine(type:int = 0)->tuple[Process, Connection]:
     """
         Creates a seperate prosses that handles all rendering and can be updated via a pipe(connection)
         returns a tuple with the first argument being the process, this can be use cancle the process but the primary use is to be saved so the renderer doesnt get collected
@@ -64,7 +96,12 @@ def initMachine()->tuple[Process, Connection]:
     returnPipe, machinePipe = Pipe(duplex=True)
     returnPipe=renderPipeCap(returnPipe)
     machinePipe=renderPipeCap(machinePipe)
-    process= Process(target=renderMachine, args=(machinePipe,))
+    if type==0:
+        process= Process(target=polarRenderMachine, args=(machinePipe,))
+    elif type==1:
+        pass
+    else:
+        raise ValueError("tried to create a render machine with type value ", type, ". This type does not exist")
     process.start()
 
 
