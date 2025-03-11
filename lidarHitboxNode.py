@@ -9,6 +9,7 @@ class lidarHiboxNode:
         self.readings=[]
         self.isLegal=isLegal
         self.isOpen=isOpen
+        self.hasBeenTouched=False
     
     """Takes the measurment to add to this node. Will return false if the measurment is outside the nodes scope and was theirfor not added, true otherwise"""
     def addReading(self, reading:lidarMeasurement)->bool:

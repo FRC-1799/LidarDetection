@@ -20,10 +20,11 @@ def lidarManager(pipeline:"lidarPipeline", lidarArgs:list, localTranslation:tran
     timesReset=0
     
     connectionArgs:list = None
+    start =time.perf_counter()
 
     while pipeline.shouldLive:
-        print("lidar cycle")
-        start =time.perf_counter()
+        
+        
 
         if not pipeline.isConnected():
             break
@@ -66,9 +67,9 @@ def lidarManager(pipeline:"lidarPipeline", lidarArgs:list, localTranslation:tran
         
         pipeline.sendMap(lidar.lastMap)
 
-
-        time.sleep(start+0.02-time.perf_counter())
-
+        if (start+0.02-time.perf_counter())>0:
+            time.sleep(start+0.02-time.perf_counter())
+        start+=0.02
 
     lidar.disconnect()
 

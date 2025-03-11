@@ -1,3 +1,4 @@
+import math
 from multiprocessing.connection import Connection
 import matplotlib.pyplot as plot
 from matplotlib.axis import Axis
@@ -10,7 +11,7 @@ from constants import constants
 
 DMAX=4000
 
-def updateLinePolar(num, pipe:renderPipeCap, subplot:Axis)->Axis:
+def updateLinePolar(num, pipe:renderPipeCap, subplot:plot.Figure)->Axis:
     """
         updates the subplot using data gained from the pipe
         pipe should be the read end of a renderPipe cap thats partner is consistently supplied with up to date lidar maps
@@ -55,9 +56,15 @@ def polarRenderMachine(pipeCap:renderPipeCap)->None:
 
 def cartRenderMachine(pipeCap:renderPipeCap)->None:
     fig = plot.figure()
-    subplot = plot.subplot(constants.mapWidthMeters*constants.mapNodeSizeMeters,constants.mapHeightMeters*constants.mapNodeSizeMeters, 0, projection='rectilinear')
+    subplot = plot.subplot(
+                            math.ceil(constants.mapWidthMeters/constants.mapNodeSizeMeters),
+                            math.ceil(constants.mapHeightMeters/constants.mapNodeSizeMeters),
+                            1,
+                            projection='rectilinear',
+        )
     subplot.grid(True)
     
+
     anim=animation.FuncAnimation(fig, updateLineCart, blit=False,
     fargs=(pipeCap, subplot), interval=50, save_count=50)
     
@@ -65,19 +72,19 @@ def cartRenderMachine(pipeCap:renderPipeCap)->None:
 
 
 
-def updateLineCart(pipeCap:renderPipeCap, subplot:Axis):
+def updateLineCart(num, pipeCap:renderPipeCap, subplot:plot.Figure):
     subplot.clear()
     scan:lidarHitboxMap = pipeCap._get()
     #print(scan.mapID)
     if scan == None:
         return
     scan=scan.getAs1DList()
-    xvals=np.array([point.x for point in scan])
-    yVals=np.array([point.y for point in scan])
+    xvals=np.array([point.x/constants.mapNodeSizeMeters for point in scan])
+    yVals=np.array([point.y/constants.mapNodeSizeMeters for point in scan])
     #offsets = np.array([[point.angle, point.distance] for point in scan])
     #offsets=[scan[0].angle, scan[0].distance]
     #subplot.set_offsets(offsets)
-    intens = np.array([1 for point in scan])
+    intens = np.array([100 for point in scan])
     #subplot.set_array(intens)
     print("render cycle", len(intens))
     return subplot.scatter(xvals, yVals, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
@@ -99,7 +106,7 @@ def initMachine(type:int = 0)->tuple[Process, Connection]:
     if type==0:
         process= Process(target=polarRenderMachine, args=(machinePipe,))
     elif type==1:
-        pass
+        process=Process(target=cartRenderMachine, args=(machinePipe,))
     else:
         raise ValueError("tried to create a render machine with type value ", type, ". This type does not exist")
     process.start()
