@@ -32,3 +32,4 @@ class constants:
         [True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True,True]
     ]
     lidarReadingToMapVal=1/1000
+    robotIsReal=False
