@@ -3,7 +3,7 @@ from constants import constants
 from lidarHitboxNode import lidarHiboxNode
 from lidarLib.lidarMeasurment import lidarMeasurement
 from lidarLib.lidarMap import lidarMap
-
+from wpimath.geometry import Pose2d
 class lidarHitboxMap:
     
     adjecencyList=[[0, 1],[0, -1],[1, 0],[-1, 0]]    
@@ -24,11 +24,11 @@ class lidarHitboxMap:
         self.seed=seed
         for y in range(0, len(seed)):
             for x in range(0, len(seed[y])):
-                print(y," ", x)
+                
                 self.nodeMap[y][x].setLegality(seed[y][x])
         
     def getAtMeters(self, x:int, y:int)->lidarHiboxNode:
-        return self.nodeMap[math.floor(y*constants.mapNodeSizeMeters)][math.floor(x*constants.mapNodeSizeMeters)]
+        return self.nodeMap[math.floor(y/constants.mapNodeSizeMeters)][math.floor(x/constants.mapNodeSizeMeters)]
     
     def getAs1DList(self)->list[lidarHiboxNode]:
         returnlist=[]
@@ -37,7 +37,7 @@ class lidarHitboxMap:
 
         return returnlist
 
-    def addVal(self, reading:lidarMeasurment):
+    def addVal(self, reading:lidarMeasurement):
         self.getAtMeters(reading.getX()*constants.lidarReadingToMapVal, reading.getY()*constants.lidarReadingToMapVal).addReading(reading)
 
 
@@ -73,16 +73,16 @@ class lidarHitboxMap:
                                 que.append(node)
 
     @staticmethod
-    def findCenter(clump:list[lidarMeasurment])->Pose2d:
+    def findCenter(clump:list[lidarMeasurement])->Pose2d:
         topHigh:lidarMeasurement=list[0]
         bottomHigh:lidarMeasurement=list[0]
         leftHigh:lidarMeasurement=list[0]
         rightHigh:lidarMeasurement=list[0]
         for measurment in list:
-            topHigh = findExtreme(topHigh, measurment)
-            bottomHigh= findExtreme(bottomHigh, measurment)
-            leftHigh = findExtreme(leftHigh, measurment)
-            rightHigh = findExtreme(rightHigh, measurment)
+            topHigh = lidarHitboxMap.findExtreme(topHigh, measurment)
+            bottomHigh= lidarHitboxMap.findExtreme(bottomHigh, measurment)
+            leftHigh = lidarHitboxMap.findExtreme(leftHigh, measurment)
+            rightHigh = lidarHitboxMap.findExtreme(rightHigh, measurment)
 
         if ((topHigh.x-bottomHigh.x)**2+(topHigh.y-bottomHigh.y)**2)>((leftHigh.x-rightHigh.x)**2+(leftHigh.y-rightHigh.y)**2):
             pass

@@ -5,6 +5,7 @@ from matplotlib.axis import Axis
 import matplotlib.animation as animation
 import numpy as np
 from multiprocessing import Process, Pipe
+import lidarHitboxNode
 from lidarHitboxingMap import lidarHitboxMap
 from renderLib.renderPipeCap import renderPipeCap
 from constants import constants
@@ -55,11 +56,13 @@ def polarRenderMachine(pipeCap:renderPipeCap)->None:
 
 
 def cartRenderMachine(pipeCap:renderPipeCap)->None:
+    global updateLineCartHeartBeat
+    updateLineCartHeartBeat=0
     fig = plot.figure()
     subplot = plot.subplot(
-                            math.ceil(constants.mapWidthMeters/constants.mapNodeSizeMeters),
-                            math.ceil(constants.mapHeightMeters/constants.mapNodeSizeMeters),
-                            1,
+                            # math.ceil(constants.mapWidthMeters/constants.mapNodeSizeMeters/100),
+                            # math.ceil(constants.mapHeightMeters/constants.mapNodeSizeMeters/100),
+                            # 1,
                             projection='rectilinear',
         )
     subplot.grid(True)
@@ -73,21 +76,31 @@ def cartRenderMachine(pipeCap:renderPipeCap)->None:
 
 
 def updateLineCart(num, pipeCap:renderPipeCap, subplot:plot.Figure):
+    global updateLineCartHeartBeat
     subplot.clear()
     scan:lidarHitboxMap = pipeCap._get()
     #print(scan.mapID)
     if scan == None:
         return
     scan=scan.getAs1DList()
-    xvals=np.array([point.x/constants.mapNodeSizeMeters for point in scan])
-    yVals=np.array([point.y/constants.mapNodeSizeMeters for point in scan])
+    xVals:list[lidarHitboxNode]=[]
+    yVals:list[lidarHitboxNode] = []
+    intens:list[float] = []
+    
+    updateLineCartHeartBeat+=1
+    print( updateLineCartHeartBeat)
+    for point in scan:
+        if (not point.isOpen):
+            xVals.append(point.x/constants.mapNodeSizeMeters)
+            yVals.append(point.y/constants.mapNodeSizeMeters)
+            intens.append(1)
     #offsets = np.array([[point.angle, point.distance] for point in scan])
     #offsets=[scan[0].angle, scan[0].distance]
     #subplot.set_offsets(offsets)
-    intens = np.array([100 for point in scan])
+    
     #subplot.set_array(intens)
     print("render cycle", len(intens))
-    return subplot.scatter(xvals, yVals, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
+    return subplot.scatter(np.array(xVals), np.array(yVals), s=10, c=np.array(intens), cmap=plot.cm.Greys_r, lw=0),
    
     
     

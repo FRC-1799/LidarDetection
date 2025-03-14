@@ -22,7 +22,7 @@ IMAX = 20
 
 def run():
     l0Process, lidar = lidarManager.makePipedLidar(False, None, translation.default())
-    lidar.connectSmart(port="/dev/lidar1", baudrate=256000, timeout=3, pwm=500)
+    lidar.connectSmart(port="/dev/lidar0", baudrate=256000, timeout=3, pwm=500)
     
     
 

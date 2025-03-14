@@ -36,14 +36,16 @@ def run():
     #lidar.currentMap.printMap()
     #print(lidar.currentMap.points)
     #lidar.currentMap.thisFuncDoesNothing()
-    renderer, pipe = initMachine(1)
+    cartRenderer, cartPipe = initMachine(1)
+    polarRenderer, polarPipe = initMachine(0)
     
     
     
-    while pipe.isConnected():
+    while cartPipe.isConnected() and polarPipe.isConnected():
         newMap=lidarHitboxingMap.lidarHitboxMap()
         newMap.addMap(lidar.getMap())
-        pipe.send(newMap)
+        cartPipe.send(newMap)
+        polarPipe.send(lidar.getMap())
         time.sleep(0.1)
             #print("data sent", lidar.lastMap.mapID)
 
