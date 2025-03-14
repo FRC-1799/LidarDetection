@@ -1,7 +1,7 @@
 import math
 from constants import constants
 from lidarHitboxNode import lidarHiboxNode
-from lidarLib import lidarMeasurment
+from lidarLib.lidarMeasurment import lidarMeasurement
 from lidarLib.lidarMap import lidarMap
 
 class lidarHitboxMap:
@@ -72,8 +72,76 @@ class lidarHitboxMap:
                             if not new.isOpen:
                                 que.append(node)
 
-                
-                        
+    @staticmethod
+    def findCenter(clump:list[lidarMeasurment])->Pose2d:
+        topHigh:lidarMeasurement=list[0]
+        bottomHigh:lidarMeasurement=list[0]
+        leftHigh:lidarMeasurement=list[0]
+        rightHigh:lidarMeasurement=list[0]
+        for measurment in list:
+            topHigh = findExtreme(topHigh, measurment)
+            bottomHigh= findExtreme(bottomHigh, measurment)
+            leftHigh = findExtreme(leftHigh, measurment)
+            rightHigh = findExtreme(rightHigh, measurment)
+
+        if ((topHigh.x-bottomHigh.x)**2+(topHigh.y-bottomHigh.y)**2)>((leftHigh.x-rightHigh.x)**2+(leftHigh.y-rightHigh.y)**2):
+            pass
+        else:
+            pass
+        
+    @staticmethod
+    def findExtreme(first:lidarMeasurement, second:lidarMeasurement, isGreater:bool, isX:bool)->lidarMeasurement:
+        firstX, firstY = first.getX(), first.getY()
+        secondX, secondY = second.getX(), second.getY()
+        if isX:
+            if isGreater:
+                if firstX>secondX:
+                    return first
+                elif firstX<secondX:
+                    return second
+                else:
+                    if (firstY>secondY):
+                        return first
+                    else:
+                        return second
+            
+            else:
+                if firstX>secondX:
+                    return second
+                elif firstX<secondX:
+                    return first
+                else:
+                    if (firstY<secondY):
+                        return second
+                    else:
+                        return first
+                    
+        else:
+            if isGreater:
+                if firstY>secondY:
+                    return first
+                elif firstY<secondY:
+                    return second
+                else:
+                    if (firstX>secondX):
+                        return first
+                    else:
+                        return second
+            
+            else:
+                if firstY>secondY:
+                    return second
+                elif firstY<secondY:
+                    return first
+                else:
+                    if (firstX<secondX):
+                        return second
+                    else:
+                        return first
+                    
+            
+
+
 
 
 
