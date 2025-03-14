@@ -84,3 +84,6 @@ class publisher:
             poses.append(Pose2d(translation.x/1000, translation.y/1000, translation.rotation))
 
         self.publishLidarPosesFromPose(poses)
+
+    def isConnected(self)->bool:
+        return self.inst.isConnected()
