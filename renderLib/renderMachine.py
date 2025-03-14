@@ -34,7 +34,7 @@ def updateLinePolar(num, pipe:renderPipeCap, subplot:plot.Figure)->Axis:
 
     intens = np.array([1 for point in scan])
     #subplot.set_array(intens)
-    print("render cycle", len(intens))
+    #print("render cycle", len(intens))
     return subplot.scatter(angles*3.14/180, distances, s=10, c=intens, cmap=plot.cm.Greys_r, lw=0),
 
 
@@ -88,7 +88,7 @@ def updateLineCart(num, pipeCap:renderPipeCap, subplot:plot.Figure):
     intens:list[float] = []
     
     updateLineCartHeartBeat+=1
-    print( updateLineCartHeartBeat)
+    #print( updateLineCartHeartBeat)
     for point in scan:
         if (not point.isOpen):
             xVals.append(point.x/constants.mapNodeSizeMeters)
@@ -99,7 +99,7 @@ def updateLineCart(num, pipeCap:renderPipeCap, subplot:plot.Figure):
     #subplot.set_offsets(offsets)
     
     #subplot.set_array(intens)
-    print("render cycle", len(intens))
+    #print("render cycle", len(intens))
     return subplot.scatter(np.array(xVals), np.array(yVals), s=10, c=np.array(intens), cmap=plot.cm.Greys_r, lw=0),
    
     

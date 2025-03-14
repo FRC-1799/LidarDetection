@@ -1,7 +1,7 @@
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 
-from lidarLib import lidarMap
+from lidarLib.lidarMap import lidarMap
 from lidarLib.Lidar import Lidar
 from enum import Enum
 
