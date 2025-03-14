@@ -331,9 +331,10 @@ class Lidar:
         
         self.__sendCommand(RPLIDAR_CMD_SCAN)
         #self.setMotorPwm(self.currentMotorPWM)
-        
-        self.__establishLoop(self.__standardUpdate)
-
+        try:
+            self.__establishLoop(self.__standardUpdate)
+        except:
+            pass
 
 
     def __startRawScan(self)->None:

@@ -6,7 +6,7 @@ from lidarLib.Lidar import Lidar
 from lidarLib.lidarMap import lidarMap
 from lidarLib.lidarPipeline import dataPacket, dataPacketType, lidarPipeline
 import time
-
+import stop
 from lidarLib.translation import translation
 
 def lidarManager(pipeline:"lidarPipeline", lidarArgs:list, localTranslation:translation):
@@ -58,8 +58,17 @@ def lidarManager(pipeline:"lidarPipeline", lidarArgs:list, localTranslation:tran
         for action in pipeline.getActionQue():
             if (action.function==Lidar.connect):
                 connectionArgs = action.args
+                try:
+                    action.function(lidar, *action.args)
+                except:
+                    stop.stop(action.args[0])
+                    time.sleep(1)
+                    lidar:Lidar = Lidar(*lidarArgs)
+                    lidar.setCurrentLocalTranslation(localTranslation)
+                    action.function(lidar, *action.args)    
+
             
-            if action.returnType==-1:
+            elif action.returnType==-1:
                 action.function(lidar, *action.args)
             else:
                 pipeline.sendData(dataPacketType(action.returnType, action.function(lidar, *action.args)))
