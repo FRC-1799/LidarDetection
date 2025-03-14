@@ -28,8 +28,12 @@ class lidarHitboxMap:
                 self.nodeMap[y][x].setLegality(seed[y][x])
         
     def getAtMeters(self, x:int, y:int)->lidarHiboxNode:
-        return self.nodeMap[math.floor(y/constants.mapNodeSizeMeters)][math.floor(x/constants.mapNodeSizeMeters)]
-    
+        try:
+            return self.nodeMap[math.floor(y/constants.mapNodeSizeMeters)][math.floor(x/constants.mapNodeSizeMeters)]
+        except:
+            
+            return self.nodeMap[math.ceil(y/constants.mapNodeSizeMeters)-1][math.ceil(x/constants.mapNodeSizeMeters)-1]
+
     def getAs1DList(self)->list[lidarHiboxNode]:
         returnlist=[]
         for arr in self.nodeMap:
