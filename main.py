@@ -24,56 +24,36 @@ import lidarHitboxingMap
 
 
 
-def run(ntPublisher:publisher, lidars:list[lidarPipeline]):
-    
+def session(ntPublisher:publisher, shouldLiveSupplier:callable):
+    process0, lidar0 = lidarManager.makePipedLidar(False, None, translation.fromCart(5000,5000,0))
+    lidar0.connectSmart(port="/dev/lidar0", baudrate=256000, timeout=3, pwm=500)
     
     
     
 
-    # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],
-    #                        cmap=plot.cm.Greys_r, lw=0)
-    
-    #lidar.setCurrentLocalTranslation(translation(0,0, 180))
-    time.sleep(1)
-    #lidar.currentMap.printMap()
-    #print(lidar.currentMap.points)
-    #lidar.currentMap.thisFuncDoesNothing()
-    cartRenderer, cartPipe = initMachine(1)
-    polarRenderer, polarPipe = initMachine(0)
-    
-    
-    
-    while cartPipe.isConnected() and polarPipe.isConnected():
-        newMap=lidarHitboxingMap.lidarHitboxMap()
-        newMap.addMap(lidar.getMap())
-        cartPipe.send(newMap)
-        polarPipe.send(lidar.getMap())
-        ntPublisher.publishHitboxesFromHitboxMap(newMap)
-        ntPublisher.publishPointsFromLidarMeasurments(lidar.getMap().getPoints())
-        ntPublisher.publishLidarPosesFromTrans([translation.fromCart(5000,5000,0)])
-        time.sleep(0.1)
-            #print("data sent", lidar.lastMap.mapID)
 
-            #print("data sent", lidar.lastMap.mapID)
+    # cartRenderer, cartPipe = initMachine(1)
+    # polarRenderer, polarPipe = initMachine(0)
+    
+    
+    
+    # while cartPipe.isConnected() and polarPipe.isConnected():
+    #     newMap=lidarHitboxingMap.lidarHitboxMap()
+    #     newMap.addMap(lidar.getMap())
+    #     cartPipe.send(newMap)
+    #     polarPipe.send(lidar.getMap())
+    #     ntPublisher.publishHitboxesFromHitboxMap(newMap)
+    #     ntPublisher.publishPointsFromLidarMeasurments(lidar.getMap().getPoints())
+    #     ntPublisher.publishLidarPosesFromTrans([translation.fromCart(5000,5000,0)])
+    #     time.sleep(0.1)
 
-    # ani = animation.FuncAnimation(
-    # fig, partial(update_line, lidar=lidar, line=line),
-    #frames=np.linspace(0, 2*np.pi, 128), blit=True)
-    # for i in range(10):
-    #     with open('data'+str(i)+'.pkl', 'wb') as file:
-    #         pickle.dump(lidar.lastMap, file)
-    #         time.sleep(2)
     
-    #lidar.sendQuitReqeust()
- 
-    
-    print("the run is done")
+    print("session terminated")
 
 def start()->tuple[list[lidarPipeline],list[Process]]:
     returnTuple= ([],[])
 
-    process, lidar = lidarManager.makePipedLidar(False, None, translation.fromCart(5000,5000,0))
-    lidar.connectSmart(port="/dev/lidar0", baudrate=256000, timeout=3, pwm=500)
+
     returnTuple[0].append(lidar)
     returnTuple[1].append(process)
 
@@ -86,24 +66,23 @@ def stop(lidars:list[lidarPipeline], processes:list[Process]):
 def main():
     
     ntPublisher = publisher()
-    lidars:list[lidarPipeline] = []
-    processes:list[Process] = []
-    isCurrent=False
+    thread = threading.Thread(target=session, daemon=True, kwargs=(ntPublisher, lambda:not ntPublisher.isConnected()))
+    
+    
+
+
     while True:
-        if (ntPublisher.isConnected()or constants.overrideNTConnectionRequirment) and isCurrent==False:
-            lidars, processes = start()
-            isCurrent=True
+        if (ntPublisher.isConnected()or constants.overrideNTConnectionRequirment) and thread.is_alive():
+            thread.start()
+            
 
-        if (not ntPublisher.isConnected() or constants.overrideNTConnectionRequirment) and isCurrent:
-            lidars, processes = stop(lidars, processes)
-            isCurrent=False
+        if (not ntPublisher.isConnected() or not constants.overrideNTConnectionRequirment) and thread.is_alive():
+            thread.join(5)
+            if thread.is_alive:
+                print("Lidar thread did not properly terminate")
+            
         
-        if (isCurrent):
-            run(ntPublisher, lidars)
-            time.sleep(0.02)
-
-        else:
-            time.sleep(5)
+        time.sleep(5)
             
 
             
