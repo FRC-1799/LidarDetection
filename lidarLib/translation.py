@@ -27,9 +27,9 @@ class translation:
 
     def applyTranslation(self, lidarPoint:lidarMeasurment)->None:
         """Applys a translation to the given point, the translation will be applyed in place"""
-        lidarPoint.angle=(lidarPoint.angle+self.rotation)%360
+        lidarPoint.angle=(lidarPoint.angle-self.rotation)%360
         
-        lidarPoint.distance, lidarPoint.angle = cartToPolar(lidarPoint.getX()+self.x, lidarPoint.getY()+self.y)
+        lidarPoint.distance, lidarPoint.angle = cartToPolar(lidarPoint.getX()-self.x, lidarPoint.getY()-self.y)
 
 
     def combineTranslation(self, addTranslation:"translation")->"translation":
