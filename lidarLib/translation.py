@@ -1,6 +1,7 @@
 import cmath
 from lidarLib import lidarMeasurment
 from lidarLib.util import polarToCart, cartToPolar
+from wpimath.geometry import Pose2d
 class translation:
     """class to translate lidarMeasurments from one 0,0 to another"""
     def __init__(self, r:float, theta:float, rotation:float):
@@ -11,15 +12,19 @@ class translation:
         self.x, self.y = polarToCart(self.r, self.theta)
 
     @classmethod 
-    def default(self):
+    def default(self)->"translation":
         """creates a translation that will translate a point from that point back to itself. good for values where a translation object is needed but a actual translation is not"""
         return self(0,0,0)
     
     @classmethod
-    def fromCart(self, x:float, y:float, rotation:float):
+    def fromCart(self, x:float, y:float, rotation:float)->"translation":
         """creates a translation from cartisian coordinates"""
         r, theta = cartToPolar(x, y)
         return self(r, theta, rotation)
+    
+    @classmethod
+    def fromPose2d(self, pose:Pose2d)->"translation":
+        return self.fromCart(pose.X(), pose.Y(), pose.rotation().degrees())
 
         
         

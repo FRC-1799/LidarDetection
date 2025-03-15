@@ -320,7 +320,7 @@ class Lidar:
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_MAX_DISTANCE, mode)),
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_US_PER_SAMPLE, mode)),
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_ANS_TYPE, mode)))
-            print(scan_mode)
+            #print(scan_mode)
             scan_modes.append(scan_mode)
         
         return scan_modes
@@ -365,7 +365,8 @@ class Lidar:
     def isConnected(self)->bool:
         return self.lidarSerial and self.lidarSerial.isOpen()
         
-
+    def getCombinedTrans(self)->translation:
+        return self.combinedTranslation
     
     def forceScan(self)->None:
         """

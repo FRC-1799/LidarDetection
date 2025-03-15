@@ -42,7 +42,7 @@ class lidarPipeline:
                         self.__commandQue.append(mostRecentVal)
 
                     elif(mostRecentVal.__class__ == quitPacket):
-                        self.shouldLiclosedve=False
+                        self.shouldLive=False
                     
                     elif(mostRecentVal.__class__ == ping):
                         pass
@@ -145,6 +145,14 @@ class lidarPipeline:
     def startScan(self):
         self.sendAction(commandPacket(Lidar.startScan, []))
 
+        
+    def addTanslation(self, translation:translation):
+        self.sendAction(commandPacket(Lidar.setCurrentLocalTranslation, [translation]))
+        self.sendAction(commandPacket(Lidar.getCombinedTrans, [], 1))
+
+    def getTranslation(self)->translation:
+        return self.__dataPackets[dataPacketType.translation]           
+
 class commandPacket:
     def __init__(self, function:callable, args:list, returnType:int=-1):
         self.function = function
@@ -160,12 +168,13 @@ class dataPacketType:
     translation = 1
     quitWarning = 2
     options:list[int] = [lidarMap, translation, quitWarning]
+    
 
 class dataPacket():
     def __init__(self, type:int, data):
         if (type not in dataPacketType.options):
             raise ValueError("Tried to create a data packet with an invalid data type")
-        
+         
         self.type = type
         self.data=data
 

@@ -81,7 +81,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarArgs:list, localTranslation:tran
             elif action.returnType==-1:
                 action.function(lidar, *action.args)
             else:
-                pipeline.sendData(dataPacketType(action.returnType, action.function(lidar, *action.args)))
+                pipeline.sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
         
         pipeline.sendMap(lidar.lastMap)
@@ -90,6 +90,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarArgs:list, localTranslation:tran
             time.sleep(start+0.02-time.perf_counter())
         start+=0.02
 
+    print("lidar shut down")
     lidar.disconnect()
 
 
