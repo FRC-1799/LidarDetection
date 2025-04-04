@@ -10,11 +10,11 @@ from lidarLib.translation import translation
 
 class lidarPipeline:
     """class that encapsulates pipe connections between a user and the render engine"""
-    def __init__(self, pipe:Connection):
+    def __init__(self, pipe:Connection, host:Process=None):
         """Creates a render pipe cap surrounding the pipe input"""
         self.__pipe=pipe
         self.__dataPackets = []
-        
+        self.host=host
 
         for type in dataPacketType.options:
             print(type)

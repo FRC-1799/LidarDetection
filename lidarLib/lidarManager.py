@@ -1,4 +1,5 @@
 import signal
+from lidarLib.lidarConfigs import lidarConfigs
 import multiexit
 from multiprocessing import Pipe, Process
 from lidarLib import *
@@ -9,7 +10,7 @@ import time
 import stop
 from lidarLib.translation import translation
 
-def lidarManager(pipeline:"lidarPipeline", lidarArgs:list, localTranslation:translation):
+def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     pipeline:"lidarPipeline"=pipeline
     lidar:Lidar = Lidar(*lidarArgs)
     lidar.setCurrentLocalTranslation(localTranslation)
@@ -96,7 +97,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarArgs:list, localTranslation:tran
 
 
 
-def makePipedLidar(debugMode:bool, deadband:list[int], lidarTranslation:translation)->tuple[Process, "lidarPipeline"]:
+def makePipedLidar(lidarConfig:lidarConfigs)->tuple[Process, "lidarPipeline"]:
     """
         Creates a seperate prosses that handles all rendering and can be updated via a pipe(connection)
         returns a tuple with the first argument being the process, this can be use cancle the process but the primary use is to be saved so the renderer doesnt get collected
@@ -106,7 +107,8 @@ def makePipedLidar(debugMode:bool, deadband:list[int], lidarTranslation:translat
     returnPipe, lidarPipe = Pipe(duplex=True)
     returnPipe=lidarPipeline(returnPipe)
     lidarPipe=lidarPipeline(lidarPipe)
-    process= Process(target=lidarManager, args=(lidarPipe, [debugMode, deadband], lidarTranslation), daemon=True)
+    process= Process(target=lidarManager, args=(lidarPipe, lidarConfig), daemon=True)
+    returnPipe.host=process
     
     try:
         multiexit.install()
