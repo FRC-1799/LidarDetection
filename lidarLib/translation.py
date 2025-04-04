@@ -24,7 +24,7 @@ class translation:
     
     @classmethod
     def fromPose2d(self, pose:Pose2d)->"translation":
-        return self.fromCart(pose.X()*1000, pose.Y()*1000, pose.rotation().degrees())
+        return self.fromCart(pose.X(), pose.Y(), pose.rotation().degrees())
 
         
         

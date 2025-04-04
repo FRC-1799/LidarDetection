@@ -56,7 +56,7 @@ class publisher:
     def publishPointsFromLidarMeasurments(self, measurments:list[lidarMeasurement]):
         poses:list[Pose2d] = []
         for measurment in measurments:
-            poses.append(Pose2d(measurment.getX()/1000, measurment.getY()/1000, Rotation2d()))
+            poses.append(Pose2d(measurment.getX(), measurment.getY(), Rotation2d()))
 
         self.publishPointsFromPoses(poses)
     
@@ -86,7 +86,7 @@ class publisher:
     def publishLidarPosesFromTrans(self, trans:list[translation]):
         poses:Pose2d = []
         for translation in trans:
-            poses.append(Pose2d(translation.x/1000, translation.y/1000, translation.rotation))
+            poses.append(Pose2d(translation.x, translation.y, translation.rotation))
 
         self.publishLidarPosesFromPose(poses)
 

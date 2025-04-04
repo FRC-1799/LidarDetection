@@ -42,7 +42,7 @@ class lidarHitboxMap:
         return returnlist
 
     def addVal(self, reading:lidarMeasurement):
-        self.getAtMeters(reading.getX()*constants.lidarReadingToMapVal, reading.getY()*constants.lidarReadingToMapVal).addReading(reading)
+        self.getAtMeters(reading.getX(), reading.getY()).addReading(reading)
 
 
     def addMap(self, map:lidarMap):
