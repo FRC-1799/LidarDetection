@@ -1,5 +1,6 @@
 
 from time import sleep
+from lidarLib.LidarConfigs import lidarConfigs
 from lidarLib.rplidarSerial import RPlidarSerial
 from lidarLib.lidarProtocol import *
 import lidarLib.lidarProtocol
@@ -12,22 +13,25 @@ from typing import Callable
 
 class Lidar:
     """class to handle, read, and translate data from a RPlidar (only A2M12 has been tested but should work for all)"""
-    def __init__(self, debugMode=False, deadband=None):
+    def __init__(self, config:lidarConfigs):
         """initalizes lidar object but does not attempt to connect or start any scans"""
         self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
         self.lastMap=lidarMap(self)
         #self.eventLoop()
-        self.deadband=deadband
+        #self.deadband=deadband
+        self.config = config
         self.capsuleType=None
         self.loop = None
         self.dataDiscriptor=None
         self.isDone=False
         self.currentMotorPWM=0
-        self.debugMode=debugMode
+        #self.debugMode=debugMode
 
-        self.localTranslation=translation.default()
+
+
+        self.localTranslation=self.config.localTrans
         self.globalTranslation=translation.default()
         self.combinedTranslation=translation.default()
         
@@ -46,16 +50,20 @@ class Lidar:
     def __exit__(self, exceptionType, exceptionValue, exceptionTraceback):
         self.disconnect()
 
-    def connect(self, port="/dev/ttyUSB0", baudrate=256000, timeout=3)->None:
+    def connect(self)->None:
         """Connects lidar object to the spesified port with the specified baud rate but does not check to make sure the port specified contains a lidar. """
         self.lidarSerial = RPlidarSerial()
-        self.lidarSerial.open(port, baudrate, timeout)
+        self.lidarSerial.open(self.config.port, self.config.baudrate, self.config.baudrate)
         
         if self.lidarSerial.isOpen():
             print("PyRPlidar Info : device is connected")
         else:
             self.readToCapsule=None
             raise ConnectionError("could not find lidar unit")
+        
+        if self.config.autoStart:
+            if self.config.mode=="normal":
+                self.startScan()
         
 
     def isRunning(self):
@@ -129,10 +137,10 @@ class Lidar:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
                 #print("update working")
                 newData=self.__receiveData(self.dataDiscriptor)
-                if not self.validatePackage(newData, printErrors=self.debugMode):
+                if not self.validatePackage(newData, printErrors=self.config.debugMode):
                     self.restartScan()
                     return
-                self.currentMap.addVal(lidarMeasurement(newData), self.combinedTranslation, printFlag=self.debugMode)
+                self.currentMap.addVal(lidarMeasurement(newData), self.combinedTranslation, printFlag=self.config.debugMode)
             else:
                 #print("break hit")
                 break
@@ -249,14 +257,21 @@ class Lidar:
         """Restarts the lidar as if it was just powered on but does not effect the cliant side lidar lib at all"""
         self.__sendCommand(RPLIDAR_CMD_RESET)
 
-    def setMotorPwm(self, pwm:int, overrideInternalValue=True)->None:
+    def setMotorPwm(self, pwm:int=0, overrideInternalValue=True)->None:
         """Sets the lidars motor to the specified pwm value. the speed must be a positive number or 0 and lower or equal to the specified max value(currently 1023)"""
         if pwm<0 or pwm>RPLIDAR_MAX_MOTOR_PWM:
             raise ValueError("lidar pwm was set to a value not within the range: ",pwm)
         self.lidarSerial.setDtr(False)
-        self.__sendCommand(RPLIDAR_CMD_SET_MOTOR_PWM, struct.pack("<H", pwm))
+
+        if self.config.defaultSpeed<0 or self.config.defaultSpeed>RPLIDAR_MAX_MOTOR_PWM:
+            raise ValueError("lidar config pwm was set to a value not within the range: ",pwm)
+
+
         if overrideInternalValue:
-            self.currentMotorPWM=pwm
+            self.config.defaultSpeed=pwm
+
+        self.__sendCommand(RPLIDAR_CMD_SET_MOTOR_PWM, struct.pack("<H", self.config.defaultSpeed))
+        
     
     
 
@@ -330,7 +345,7 @@ class Lidar:
         """Starts a standard scan on the lidar and starts the update cycle"""
         
         self.__sendCommand(RPLIDAR_CMD_SCAN)
-        #self.setMotorPwm(self.currentMotorPWM)
+        self.setMotorPwm(overrideInternalValue=False)
         
         self.__establishLoop(self.__standardUpdate)
 
@@ -380,8 +395,8 @@ class Lidar:
     def mapIsDone(self)->None:
         """Handles all the cleanup that is needed when a scan map is done and a new one needs to be initalized"""
         self.lastMap=self.currentMap
-        self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1, deadband=self.deadband, sensorThetaOffset=self.localTranslation.theta)
-        if self.debugMode:
+        self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1, deadband=self.config.deadband, sensorThetaOffset=self.localTranslation.theta)
+        if self.config.debugMode:
             print("map swap attempted")
             print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID, self.lastMap.getRange(), self.lastMap.getHz(), self.lastMap.getPeriod())
             print(len(self.currentMap.getPoints()),self.currentMap.len ,self.currentMap.mapID)
@@ -412,5 +427,7 @@ class Lidar:
             The inputed argument should be a list of ints in which the first argument is the start of the deadband and the second is the end. 
             If the second argument is larger than the first the deadband will be assumed to wrap past 360 degrees. 
         """
-        self.deadband=deadband
-        self.currentMap.setDeadband(deadband)
+        self.config.deadband=deadband
+        self.currentMap.setDeadband(
+            
+        )

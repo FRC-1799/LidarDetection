@@ -126,15 +126,13 @@ class lidarPipeline:
         return True
     
     #util functions
-    def connectSmart(self, port="/dev/ttyUSB0", baudrate=256000, timeout=3, pwm=500):
-        self.connect(port, baudrate, timeout)
-        self.setPWM(pwm)
-        self.startScan()
-        
+    def connectSmart(self,):
+        self.connect()
 
+    
 
-    def connect(self, port="/dev/ttyUSB0", baudrate=256000, timeout=3):
-        self.sendAction(commandPacket(Lidar.connect, [port, baudrate, timeout]))
+    def connect(self):
+        self.sendAction(commandPacket(Lidar.connect,[]))
 
     def getMap(self)->lidarMap:
         return self.getDataPacket(dataPacketType.lidarMap)
@@ -167,7 +165,9 @@ class dataPacketType:
     lidarMap = 0
     translation = 1
     quitWarning = 2
-    options:list[int] = [lidarMap, translation, quitWarning]
+    sampleRate = 3
+    scanModes = 4
+    options:list[int] = [lidarMap, translation, quitWarning, sampleRate, scanModes]
     
 
 class dataPacket():

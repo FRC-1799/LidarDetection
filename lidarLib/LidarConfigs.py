@@ -7,7 +7,7 @@ from lidarLib.translation import translation
 
 class lidarConfigs:
     def __init__(self, port:string, localTrans = translation.default(), baudrate = 256000, timeout=3, deadband=None, debugMode=False,
-                isStop=False, autoStart=False, defaultSpeed=0, reportData=True, reportSampleRate=True, reportScanModes=True, reportCombinedOffset=True):
+                isStop=False, autoStart=False, autoConnect=True, defaultSpeed=0, reportData=True, reportSampleRate=True, reportScanModes=True, reportCombinedOffset=True, mode="normal"):
         self.port=port
         self.localTrans = localTrans
         self.baudrate = baudrate
@@ -21,24 +21,28 @@ class lidarConfigs:
         self.reportSampleRate=reportSampleRate
         self.reportScanModes=reportScanModes
         self.reportCombinedOffset = reportCombinedOffset
+        self.mode=mode
+        self.autoConnect=autoConnect
 
         if debugMode:
             self.printConfigs()
             
     def printConfigs(self):
         print("new lidarConfig created with args", 
-            "\nport: ", self.port,
-            "\nlocalTrans: ", self.localTrans,
-            "\nbaudrate: ", self.baudrate,
-            "\ndeadband: ", self.deadband,
-            "\ndebugMode: ", self.debugMode,
-            "\nisStop: ", self.isStop,
-            "\nautoStart: ", self.autoStart,
-            "\ndefualtSpeed: ", self.defaultSpeed,
-            "\nreportData: ", self.reportData,
-            "\nreportSampleRate", self.reportSampleRate,
-            "\nreportScanModes", self.reportScanModes,
-            "\nreportCombinedOffset", self.reportCombinedOffset            
+            "\nport:", self.port,
+            "\nlocalTrans:", self.localTrans,
+            "\nbaudrate:", self.baudrate,
+            "\ndeadband:", self.deadband,
+            "\ndebugMode:", self.debugMode,
+            "\nisStop:", self.isStop,
+            "\nautoStart:", self.autoStart,
+            "\nautoConnect:", self.autoConnect,
+            "\ndefualtSpeed:", self.defaultSpeed,
+            "\nreportData:", self.reportData,
+            "\nreportSampleRate:", self.reportSampleRate,
+            "\nreportScanModes:", self.reportScanModes,
+            "\nreportCombinedOffset:", self.reportCombinedOffset  ,
+            "\nmode:", self.mode           
         )
 
     @classmethod

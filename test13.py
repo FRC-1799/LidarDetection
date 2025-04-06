@@ -1,5 +1,6 @@
 
 '''Animates distances and measurment quality'''
+from lidarLib.LidarConfigs import lidarConfigs
 from lidarLib.lidarMeasurment import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import matplotlib.pyplot as plot
@@ -21,8 +22,8 @@ IMAX = 20
 
 
 def run():
-    l0Process, lidar = lidarManager.makePipedLidar(False, None, translation.default())
-    lidar.connectSmart(port="/dev/lidar0", baudrate=256000, timeout=3, pwm=500)
+    lidar = lidarManager.makePipedLidar(lidarConfigs("/dev/lidar0", defaultSpeed=500))
+    lidar.connectSmart()
     
     
 

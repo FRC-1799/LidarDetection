@@ -1,5 +1,5 @@
 import signal
-from lidarLib.lidarConfigs import lidarConfigs
+from lidarLib.LidarConfigs import lidarConfigs
 import multiexit
 from multiprocessing import Pipe, Process
 from lidarLib import *
@@ -12,8 +12,12 @@ from lidarLib.translation import translation
 
 def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     pipeline:"lidarPipeline"=pipeline
-    lidar:Lidar = Lidar(*lidarArgs)
-    lidar.setCurrentLocalTranslation(localTranslation)
+    lidar:Lidar = Lidar(lidarConfig)
+    if (lidarConfig.reportScanModes):
+        pipeline.sendData(dataPacket(dataPacketType.scanModes, lidar.getScanModes()))
+    if (lidarConfig.reportSampleRate):
+        pipeline.sendData(dataPacket(dataPacketType.sampleRate, lidar.getSampleRate()))
+
 
 
     multiexit.register(lidar.disconnect)
@@ -41,9 +45,8 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
                 pipeline.sendData(dataPacket(dataPacketType.quitWarning), timesReset)
                 time.sleep(0.001)
 
-                lidar:Lidar = Lidar(*lidarArgs)
-                lidar.setCurrentLocalTranslation(localTranslation)
-                lidar.connect(connectionArgs)
+                lidar:Lidar = Lidar(lidarConfigs)
+                lidar.connect()
                 lidar.setMotorPwm(500)
                 lidar.startScan()
 
@@ -57,13 +60,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
 
         for action in pipeline.getActionQue():
-            if (action.function==Lidar.connect):
-                connectionArgs = action.args
-              
-                action.function(lidar, *action.args)
-   
-
-            elif action.function==Lidar.startScan:
+            if action.function==Lidar.startScan:
                 try:
                     action.function(lidar, *action.args)
                 except:
@@ -84,8 +81,12 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
             else:
                 pipeline.sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
+        if (lidarConfig.reportData):
+            pipeline.sendMap(lidar.lastMap)
+        if (lidarConfig.reportCombinedOffset):
+            pipeline.sendData(dataPacket(action.translation, lidar.getCombinedTrans()))
+
         
-        pipeline.sendMap(lidar.lastMap)
 
         if (start+0.02-time.perf_counter())>0:
             time.sleep(start+0.02-time.perf_counter())
@@ -97,7 +98,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
 
 
-def makePipedLidar(lidarConfig:lidarConfigs)->tuple[Process, "lidarPipeline"]:
+def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
     """
         Creates a seperate prosses that handles all rendering and can be updated via a pipe(connection)
         returns a tuple with the first argument being the process, this can be use cancle the process but the primary use is to be saved so the renderer doesnt get collected
@@ -117,6 +118,6 @@ def makePipedLidar(lidarConfig:lidarConfigs)->tuple[Process, "lidarPipeline"]:
     process.start()
 
 
-    return process, returnPipe
+    return returnPipe
 
     
