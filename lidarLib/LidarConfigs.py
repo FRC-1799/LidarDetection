@@ -5,9 +5,30 @@ import json
 from lidarLib.translation import translation
 
 
+
+
 class lidarConfigs:
-    def __init__(self, port:string, localTrans = translation.default(), baudrate = 256000, timeout=3, deadband=None, debugMode=False,
-                isStop=False, autoStart=False, autoConnect=True, defaultSpeed=0, reportData=True, reportSampleRate=True, reportScanModes=True, reportCombinedOffset=True, mode="normal"):
+
+
+    defaultLocalTrans = translation.default()
+    defaultBaudrate = 256000
+    defaultTimeout=3, deadband=None, debugMode=False,
+    defaultIsStop=False
+    defaultAutoStart=False
+    defaultAutoConnect=True
+    defaultDefaultSpeed=0
+    defaultDeadband=None
+    defaultDebugMode = False
+    defaultReportData=True
+    defaultReportSampleRate=True
+    defaultReportScanModes=True
+    defaultReportCombinedOffset=True
+    defaultMode="normal"
+
+
+    def __init__(self, port:string, localTrans = defaultLocalTrans, baudrate = defaultBaudrate, timeout=defaultTimeout, mode=defaultMode, deadband=defaultDeadband, debugMode=defaultDebugMode,
+                isStop=defaultIsStop, autoStart=defaultAutoStart, autoConnect=defaultAutoConnect, defaultSpeed=defaultDefaultSpeed,
+                reportData=defaultReportData, reportSampleRate=defaultReportSampleRate, reportScanModes=defaultReportScanModes, reportCombinedOffset=defaultReportCombinedOffset):
         self.port=port
         self.localTrans = localTrans
         self.baudrate = baudrate
@@ -46,11 +67,30 @@ class lidarConfigs:
         )
 
     @classmethod
-    @DeprecationWarning
     def configsFromJson(cls:"lidarConfigs", path:string):
         try:
             with open(path, 'r') as file:
-                data = json.load(file)
+                data:dict = json.load(file)
+
+                return cls(
+                    port = data.get("port"), 
+                    translation = translation.fromCart(file.get("localTrans").get("x", lidarConfigs.defaultLocalTrans.getX()), file.get("localTrans").get("y", lidarConfigs.defaultLocalTrans.getY()), file.get("localTrans").get("rotation", lidarConfigs.defaultLocalTrans.getRotation())),
+                    baudrate = data.get("baudrate", lidarConfigs.defaultBaudrate),
+                    timeout = data.get("deadband", lidarConfigs.defaultTimeout),
+                    mode  = data.get("mode", lidarConfigs.defaultMode),
+                    debugMode = data("debugMode", lidarConfigs.defaultDebugMode),
+                    isStop = data.get("isStop", lidarConfigs.defaultIsStop),
+                    autoStart = data.get("autoStart", lidarConfigs.defaultAutoStart),
+                    autoConnect = data.get("autoConnect", lidarConfigs.defaultAutoConnect),
+                    defaultSpeed = data.get("defaultSpeed", lidarConfigs.defaultDefaultSpeed),
+                    reportData = data.get("reportData", lidarConfigs.defaultReportData),
+                    reportSampleRate = data.get("reportSampleRate", lidarConfigs.defaultReportSampleRate),
+                    reportScanModes = data.get("reportScanModes", lidarConfigs.defaultReportScanModes),
+                    reportCombinedOffset = data("reportCombinedOffset", lidarConfigs.defaultReportCombinedOffset)
+                )
+            
+
+
         except FileNotFoundError:
             print(f"Error: File not found at path: {path}")
             return None
@@ -59,17 +99,4 @@ class lidarConfigs:
             return None
 
 
-        return cls(
-            data["port"], 
-            translation.fromCart(data["localTrans"]['x'], data["localTrans"]['y'], data["localTrans"]['rotation']),
-            data["baudrate"],
-            data["deadband"],
-            data["debugMode"],
-            data["isStop"],
-            data["autoStart"],
-            data["defaultSpeed"],
-            data["reportData"],
-            data["reportSampleRate"],
-            data["reportScanModes"],
-            data["reportCombinedOffset"]
-            )
+

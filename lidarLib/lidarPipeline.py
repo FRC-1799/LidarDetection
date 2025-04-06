@@ -94,10 +94,19 @@ class lidarPipeline:
         return self.__dataPackets[type]
     
 
-    def sendMap(self, sendable:lidarMap)->None:
+    def sendMap(self, map:lidarMap)->None:
         """Sends the inputed lidar map to the other side of the pipe(aka the render machinel)"""
         
-        self.sendData(dataPacket(dataPacketType.lidarMap, sendable))
+        self.sendData(dataPacket(dataPacketType.lidarMap, map))
+
+    def sendTrans(self, translation:translation):
+        self.sendData(dataPacket(dataPacketType.translation, translation))
+
+    def sendSampleRate(self, sampleRate):
+        self.sendData(dataPacket(dataPacketType.sampleRate, sampleRate))
+
+    def sendScanTypes(self, scanTypes):
+        self.sendData(dataPacket(dataPacketType.scanModes, scanTypes))
 
     def sendData(self, data:"dataPacket"):
         if (data.__class__!= dataPacket and data.type not in dataPacketType.options):

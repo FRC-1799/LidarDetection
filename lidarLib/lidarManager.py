@@ -14,9 +14,9 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     pipeline:"lidarPipeline"=pipeline
     lidar:Lidar = Lidar(lidarConfig)
     if (lidarConfig.reportScanModes):
-        pipeline.sendData(dataPacket(dataPacketType.scanModes, lidar.getScanModes()))
+        pipeline.sendScanTypes(lidar.getScanModes())
     if (lidarConfig.reportSampleRate):
-        pipeline.sendData(dataPacket(dataPacketType.sampleRate, lidar.getSampleRate()))
+        pipeline.sendSampleRate(lidar.getSampleRate())
 
 
 
@@ -84,7 +84,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         if (lidarConfig.reportData):
             pipeline.sendMap(lidar.lastMap)
         if (lidarConfig.reportCombinedOffset):
-            pipeline.sendData(dataPacket(action.translation, lidar.getCombinedTrans()))
+            pipeline.sendTrans(lidar.getCombinedTrans())
 
         
 
