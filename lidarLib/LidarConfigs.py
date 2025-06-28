@@ -12,7 +12,9 @@ class lidarConfigs:
 
     defaultLocalTrans = translation.default()
     defaultBaudrate = 256000
-    defaultTimeout=3, deadband=None, debugMode=False,
+    defaultTimeout=3, 
+    deadband=None, 
+    debugMode=False,
     defaultIsStop=False
     defaultAutoStart=False
     defaultAutoConnect=True
@@ -44,6 +46,7 @@ class lidarConfigs:
         self.reportCombinedOffset = reportCombinedOffset
         self.mode=mode
         self.autoConnect=autoConnect
+        self.deadband = deadband
 
         if debugMode:
             self.printConfigs()
@@ -67,18 +70,23 @@ class lidarConfigs:
         )
 
     @classmethod
-    def configsFromJson(cls:"lidarConfigs", path:string):
+    def configsFromJson(cls:"lidarConfigs", path:string)->"lidarConfigs":
         try:
             with open(path, 'r') as file:
                 data:dict = json.load(file)
 
                 return cls(
                     port = data.get("port"), 
-                    translation = translation.fromCart(file.get("localTrans").get("x", lidarConfigs.defaultLocalTrans.getX()), file.get("localTrans").get("y", lidarConfigs.defaultLocalTrans.getY()), file.get("localTrans").get("rotation", lidarConfigs.defaultLocalTrans.getRotation())),
+                    localTrans = translation.fromCart(
+                        data.get("localTrans").get("x", lidarConfigs.defaultLocalTrans.x),
+                        data.get("localTrans").get("y", lidarConfigs.defaultLocalTrans.y),
+                        data.get("localTrans").get("rotation", lidarConfigs.defaultLocalTrans.rotation)
+                    ),
                     baudrate = data.get("baudrate", lidarConfigs.defaultBaudrate),
-                    timeout = data.get("deadband", lidarConfigs.defaultTimeout),
+                    deadband = data.get("deadband", lidarConfigs.defaultTimeout),
+                    timeout = data.get("timeout", lidarConfigs.defaultDeadband),
                     mode  = data.get("mode", lidarConfigs.defaultMode),
-                    debugMode = data("debugMode", lidarConfigs.defaultDebugMode),
+                    debugMode = data.get("debugMode", lidarConfigs.defaultDebugMode),
                     isStop = data.get("isStop", lidarConfigs.defaultIsStop),
                     autoStart = data.get("autoStart", lidarConfigs.defaultAutoStart),
                     autoConnect = data.get("autoConnect", lidarConfigs.defaultAutoConnect),
@@ -86,7 +94,7 @@ class lidarConfigs:
                     reportData = data.get("reportData", lidarConfigs.defaultReportData),
                     reportSampleRate = data.get("reportSampleRate", lidarConfigs.defaultReportSampleRate),
                     reportScanModes = data.get("reportScanModes", lidarConfigs.defaultReportScanModes),
-                    reportCombinedOffset = data("reportCombinedOffset", lidarConfigs.defaultReportCombinedOffset)
+                    reportCombinedOffset = data.get("reportCombinedOffset", lidarConfigs.defaultReportCombinedOffset)
                 )
             
 
@@ -97,6 +105,40 @@ class lidarConfigs:
         except json.JSONDecodeError:
             print(f"Error: Invalid JSON format in file: {path}")
             return None
+
+    def writeToJson(self, path:string):
+        try:
+            data = {
+                
+                "port" : self.port,
+                "localTrans": {
+                    "x":self.localTrans.x,
+                    "y":self.localTrans.y,
+                    "rotation":self.localTrans.rotation
+                },
+                "baudrate" : self.baudrate,
+                "deadband" : self.deadband,
+                "timeout" : self.timeout,
+                "mode"  : self.mode,
+                "debugMode" : self.debugMode,
+                "isStop" : self.isStop,
+                "autoStart" : self.autoStart,
+                "autoConnect" : self.autoConnect,
+                "defaultSpeed" : self.defaultSpeed,
+                "reportData" : self.reportData,
+                "reportSampleRate" : self.reportSampleRate,
+                "reportScanModes" : self.reportScanModes,
+                "reportCombinedOffset" : self.reportCombinedOffset
+            }
+
+            with open(path, 'w') as file:
+                json.dump(data, file)                
+
+
+        except FileNotFoundError:
+            print(f"Error: File not found at path: {path}")
+            return None
+
 
 
 

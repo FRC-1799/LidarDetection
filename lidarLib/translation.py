@@ -11,6 +11,10 @@ class translation:
         self.rotation=rotation
         self.x, self.y = polarToCart(self.r, self.theta)
 
+    def __str__(self):
+        return "Translation with coordinates: x = " + str(self.x) + ", y = " + str(self.y) + ", rotation = " + str(self.rotation) + ", r = " + str(self.r) + ", theta = " + str(self.theta)
+
+
     @classmethod 
     def default(self)->"translation":
         """creates a translation that will translate a point from that point back to itself. good for values where a translation object is needed but a actual translation is not"""
@@ -18,7 +22,7 @@ class translation:
     
     @classmethod
     def fromCart(self, x:float, y:float, rotation:float)->"translation":
-        """creates a translation from cartisian coordinates"""
+        """creates a translation from cartesian coordinates"""
         r, theta = cartToPolar(x, y)
         return self(r, theta, rotation)
     
