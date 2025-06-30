@@ -135,7 +135,7 @@ class lidarPipeline:
         return True
     
     #util functions
-    def connectSmart(self,):
+    def connectSmart(self):
         self.connect()
 
     

@@ -37,6 +37,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
         if not lidar.isRunning() and lidar.isConnected():
             lidar.startScan()
+            time.sleep(5)
             quitCount+=100
             if quitCount>10000:
                 lidar.disconnect()

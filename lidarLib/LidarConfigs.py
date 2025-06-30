@@ -12,9 +12,9 @@ class lidarConfigs:
 
     defaultLocalTrans = translation.default()
     defaultBaudrate = 256000
-    defaultTimeout=3, 
-    deadband=None, 
-    debugMode=False,
+    defaultTimeout=3 
+    deadband=None
+    debugMode=False
     defaultIsStop=False
     defaultAutoStart=False
     defaultAutoConnect=True
@@ -59,6 +59,7 @@ class lidarConfigs:
             "\ndeadband:", self.deadband,
             "\ndebugMode:", self.debugMode,
             "\nisStop:", self.isStop,
+            "\ntimeout: ", self.timeout,
             "\nautoStart:", self.autoStart,
             "\nautoConnect:", self.autoConnect,
             "\ndefualtSpeed:", self.defaultSpeed,

@@ -19,6 +19,7 @@ from lidarLib import lidarManager
 from lidarLib.lidarPipeline import lidarPipeline
 from lidarHitboxingMap import lidarHitboxMap
 import multiexit
+from lidarLib.LidarConfigs import lidarConfigs
 
 
 
@@ -26,8 +27,8 @@ import multiexit
 
 def session(ntPublisher:publisher, shouldLiveSupplier:callable):
     print("session started")
-    process0, lidar0 = lidarManager.makePipedLidar(False, None, translation.fromCart(5000,5000,0))
-    lidar0.connectSmart(port="/dev/lidar0", baudrate=256000, timeout=3, pwm=500)
+    lidar0:lidarPipeline = lidarManager.makePipedLidar(lidarConfigs.makeFromJson("lidar0.json"))
+    # lidar0.connectSmart()
     
     lidars = [lidar0]
     time.sleep(5)
