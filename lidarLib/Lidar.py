@@ -53,7 +53,9 @@ class Lidar:
     def connect(self)->None:
         """Connects lidar object to the spesified port with the specified baud rate but does not check to make sure the port specified contains a lidar. """
         self.lidarSerial = RPlidarSerial()
-        self.lidarSerial.open(self.config.port, self.config.baudrate, self.config.baudrate)
+        self.lidarSerial.open(self.config.port, self.config.baudrate,timeout=self.config.timeout)
+        print(self.config.port)
+        print(self.config.baudrate)
         
         if self.lidarSerial.isOpen():
             print("PyRPlidar Info : device is connected")
@@ -317,7 +319,7 @@ class Lidar:
 
     def getScanModeTypical(self)->int:
         """Fetches and returns the best scan mode fot the connected lidar"""
-        data = self.__getLidarConf(struct.pack("<I", PLIDAR_CONF_SCAN_MODE_TYPICAL))
+        data = self.__getLidarConf(struct.pack("<I", RPLIDAR_CONF_SCAN_MODE_TYPICAL))
         typical_mode = struct.unpack("<H", data[4:6])[0]
         return typical_mode
 

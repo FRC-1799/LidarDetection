@@ -14,9 +14,12 @@ class RPlidarSerial:
         """
         if self.serial is not None:
             self.close()
+
+
         try:
             self.serial = serial.Serial(port, baudrate, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_ONE, timeout=timeout, dsrdtr=True)
         except serial.SerialException as err:
+            print(err)
             print("Failed to connect to the rplidar")
     
     def close(self)->None:

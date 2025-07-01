@@ -1,9 +1,11 @@
 from lidarLib.Lidar import Lidar
 import sys
 
+from lidarLib.LidarConfigs import lidarConfigs
+
 def stop(port:str):
-    lidar = Lidar()
-    lidar.connect(port=port, baudrate=256000, timeout=3)
+    lidar = Lidar(lidarConfigs(port))
+    lidar.connect()
 
     lidar.stop()
     lidar.disconnect()
