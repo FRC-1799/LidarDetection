@@ -9,6 +9,15 @@ from lidarLib.lidarMeasurment import lidarMeasurement
 import threading
 from lidarLib.translation import translation
 from typing import Callable
+import os
+
+
+#Checks if the lidar library is running on root. this check will be run once when the lidar module is first imported.
+
+if (os.geteuid()!=0):
+    print("WARNING: The lidar library expects to be run with root perms (via sudo) and may not perform correctly otherwise")
+    sleep(2)
+
 
 
 class Lidar:
@@ -34,6 +43,9 @@ class Lidar:
         self.localTranslation=self.config.localTrans
         self.globalTranslation=translation.default()
         self.combinedTranslation=translation.default()
+
+
+        
         
 
         
