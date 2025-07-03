@@ -38,8 +38,14 @@ class Lidar:
         self.currentMotorPWM=0
         #self.debugMode=debugMode
 
-        self.capsule_prev=None
-
+        self.capsulePrev=None
+        
+        self.scanModes=[]
+        self.typicalScanMode=None
+        self.lidarInfo=None
+        self.lidarHealth=None
+        self.lidarScan=None
+        self.sampleRate=None
 
         self.localTranslation=self.config.localTrans
         self.globalTranslation=translation.default()
@@ -79,9 +85,18 @@ class Lidar:
             self.readToCapsule=None
             raise ConnectionError("could not find lidar unit")
         
+
+        self.__getHealth()
+        self.__getInfo()
+        self.__getSampleRate()
+        self.__getScanModeCount()
+        self.__getScanModes()
+        self.__getScanModeTypical()
+        
         if self.config.autoStart:
             if self.config.mode=="normal":
                 self.startScan()
+                print("start attempted")
         
 
     def isRunning(self):
@@ -172,10 +187,10 @@ class Lidar:
             since the express scan is currently deprecated in this library this function should never be called
         """
 
-        while not self.capsule_prev:
+        while not self.capsulePrev:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
 
-                self.capsule_prev = self.capsuleType(self.__receiveData(self.dataDiscriptor))
+                self.capsulePrev = self.capsuleType(self.__receiveData(self.dataDiscriptor))
         
         while not self.isDone:
             #print("update")
@@ -185,11 +200,11 @@ class Lidar:
                 data = self.__receiveData(self.dataDiscriptor)
                 capsule_current = self.capsuleType(data)
                 
-                nodes = self.capsuleType._parse_capsule(self.capsule_prev, capsule_current)
+                nodes = self.capsuleType._parse_capsule(self.capsulePrev, capsule_current)
                 for index, node in enumerate(nodes):
                         self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), self.combinedTranslation, printFlag=True)
 
-                self.capsule_prev = capsule_current
+                self.capsulePrev = capsule_current
             else:
                 break
             
@@ -315,29 +330,53 @@ class Lidar:
     
     
 
-    def getInfo(self)->RPlidarDeviceInfo:
-        """Fetches and returns the connected lidars info in the form of a RPlidarDeviceInfo object"""
+    def __getInfo(self)->None:
+        """Fetches and saves the connected lidars info in the form of a RPlidarDeviceInfo object"""
         self.__sendCommand(RPLIDAR_CMD_GET_INFO)
         discriptor = self.__receiveDiscriptor()
         data = self.__receiveData(discriptor)
-        return RPlidarDeviceInfo(data)
+        self.lidarInfo = RPlidarDeviceInfo(data)
 
-    def getHealth(self)->RPlidarHealth:
-        """Fetches and returns the connected lidars health in the form of a RPlidarDeviceHealth object"""
+
+    def getInfo(self)->RPlidarDeviceInfo:
+        """Returns the connected lidars info in the form of a RPlidarDeviceInfo object"""
+        if not self.lidarInfo:
+            raise ValueError("Lidar info can not be fetched before the lidar has been connected")
+        return self.lidarInfo
+
+
+
+    def __getHealth(self)->RPlidarHealth:
+        """Fetches and saves the connected lidars health in the form of a RPlidarDeviceHealth object"""
         self.__sendCommand(RPLIDAR_CMD_GET_HEALTH)
         discriptor = self.__receiveDiscriptor()
         data = self.__receiveData(discriptor)
-        return RPlidarHealth(data)
+        self.lidarHealth = RPlidarHealth(data)
+
+    def getHealth(self)->RPlidarHealth:
+        """Returns the connected lidars health in the form of a RPlidarDeviceHealth object"""
+        if not self.lidarHealth:
+            raise ValueError("Lidar health can not be fetched before the lidar has been connected")
+        return self.lidarHealth
+
+    def __getSampleRate(self)->None:
+        """
+            Fetches and saves the connected lidars sample rates for both standard and express modes. 
+            The measurments are in microseconds per reading. the data is returned in the form of a RPlidarSamplerateObject.
+        """
+        self.__sendCommand(RPLIDAR_CMD_GET_SAMPLERATE)
+        discriptor = self.__receiveDiscriptor()
+        data = self.__receiveData(discriptor)
+        self.sampleRate = RPlidarSamplerate(data)
 
     def getSampleRate(self)->RPlidarSamplerate:
         """
             Fetches and returns the connected lidars sample rates for both standard and express modes. 
             The measurments are in microseconds per reading. the data is returned in the form of a RPlidarSamplerateObject.
         """
-        self.__sendCommand(RPLIDAR_CMD_GET_SAMPLERATE)
-        discriptor = self.__receiveDiscriptor()
-        data = self.__receiveData(discriptor)
-        return RPlidarSamplerate(data)
+        if not self.sampleRate:
+            raise ValueError("Lidar sample rate can not be fetched before the lidar has been connected")
+        return self.sampleRate
 
     def __getLidarConf(self, payload:struct)->bytes:
         """
@@ -349,36 +388,63 @@ class Lidar:
         data = self.__receiveData(discriptor)
         return data
 
-    def getScanModeCount(self)->int:
-        """Fetches and returns the number of scan modes supported by the connected lidar"""
+    def __getScanModeCount(self)->None:
+        """Fetches and saves the number of scan modes supported by the connected lidar"""
         data = self.__getLidarConf(struct.pack("<I", RPLIDAR_CONF_SCAN_MODE_COUNT))
-        count = struct.unpack("<H", data[4:6])[0]
-        return count
+        self.scanModeCount = struct.unpack("<H", data[4:6])[0]
+        
+    
+    def getScanModeCount(self)->int:
+        """Returns the number of scan modes supported by the connected lidar"""
+        if not self.scanModeCount:
+            raise ValueError("Lidar scan mode count can not be fetched before the lidar has been connected")
+        return self.scanModeCount
+
+    def __getScanModeTypical(self)->None:
+        """Fetches saves the best scan mode for the connected lidar"""
+        data = self.__getLidarConf(struct.pack("<I", RPLIDAR_CONF_SCAN_MODE_TYPICAL))
+        self.typicalScanMode = struct.unpack("<H", data[4:6])[0]
+        
+    
 
     def getScanModeTypical(self)->int:
-        """Fetches and returns the best scan mode fot the connected lidar"""
-        data = self.__getLidarConf(struct.pack("<I", RPLIDAR_CONF_SCAN_MODE_TYPICAL))
-        typical_mode = struct.unpack("<H", data[4:6])[0]
-        return typical_mode
+        """Returns the best scan mode for the connected lidar"""
+        if not self.typicalScanMode:
+            raise ValueError("Lidar typical scan mode can not be fetched before the lidar has been connected")
+        
+        return self.typicalScanMode
 
-    def getScanModes(self)->list[RPlidarScanMode]:
+    def __getScanModes(self)->None:
         """
-            fetches and returns a list of RPlidarScanMode objects for each scan mode supported by the current connected lidar.
+            fetches and saves the scan modes of the lidar for later use.
             WARNING: some of the modes returned may be supported by the lidar but not supported by the cliant side lib.
         """
-        scan_modes = []
-        scan_mode_count = self.getScanModeCount()
+    
+
         
-        for mode in range(scan_mode_count):
+        
+        for mode in range(self.getScanModeCount()):
             scan_mode = RPlidarScanMode(
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_NAME, mode)),
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_MAX_DISTANCE, mode)),
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_US_PER_SAMPLE, mode)),
                             self.__getLidarConf(struct.pack("<IH", RPLIDAR_CONF_SCAN_MODE_ANS_TYPE, mode)))
             #print(scan_mode)
-            scan_modes.append(scan_mode)
+            self.scanModes.append(scan_mode)
         
-        return scan_modes
+        
+    
+    def getScanModes(self)->list[RPlidarScanMode]:
+        """
+            returns a list of RPlidarScanMode objects for each scan mode supported by the current connected lidar.
+            WARNING: some of the modes returned may be supported by the lidar but not supported by the cliant side lib.
+        """
+        if not self.scanModes:
+            raise ValueError("Lidar scan modes can not be fetched before the lidar has been connected")
+        
+        return self.scanModes
+    
+    
 
 
     def startScan(self)->None:

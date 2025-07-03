@@ -2,6 +2,7 @@ import string
 import json
 
 
+from lidarLib import lidarProtocol
 from lidarLib.translation import translation
 
 
@@ -18,7 +19,7 @@ class lidarConfigs:
     defaultIsStop=False
     defaultAutoStart=False
     defaultAutoConnect=True
-    defaultDefaultSpeed=0
+    defaultDefaultSpeed=lidarProtocol.RPLIDAR_DEFAULT_MOTOR_PWM
     defaultDeadband=None
     defaultDebugMode = False
     defaultReportData=True
