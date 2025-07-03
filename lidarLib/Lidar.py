@@ -38,6 +38,7 @@ class Lidar:
         self.currentMotorPWM=0
         #self.debugMode=debugMode
 
+        self.capsule_prev=None
 
 
         self.localTranslation=self.config.localTrans
@@ -90,7 +91,6 @@ class Lidar:
             if reset loop is set to false the function will only fetch the discriptor and change the update function but it will not tamper with the update thread
         """
         self.__update=updateFunc
-        self.dataDiscriptor = self.__receiveDiscriptor()
         if resetLoop:
             self.loop = threading.Thread(target=self.__updateLoop, daemon=True)
             self.loop.start()
@@ -160,7 +160,7 @@ class Lidar:
                 break
         
         #print("thingy")
-    @DeprecationWarning
+    #@DeprecationWarning
     def __capsuleUpdate(self)->None:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
@@ -168,24 +168,45 @@ class Lidar:
             actual update function for express scans. Will read the buffer into new measurments which are passed into the current map
             since the express scan is currently deprecated in this library this function should never be called
         """
-        data = self.__receiveData(self.dataDiscriptor)
-        capsule_prev = self.capsuleType(data)
-        capsule_current = None
+
+        while not self.capsule_prev:
+            if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
+
+                self.capsule_prev = self.capsuleType(self.__receiveData(self.dataDiscriptor))
         
         while not self.isDone:
-            print("update")
+            #print("update")
+            #print(self.dataDiscriptor, self.lidarSerial.bufferSize())
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
-                print("data read")
+                #print("data read")
                 data = self.__receiveData(self.dataDiscriptor)
                 capsule_current = self.capsuleType(data)
                 
-                nodes = self.capsuleType._parse_capsule(capsule_prev, capsule_current)
+                nodes = self.capsuleType._parse_capsule(self.capsule_prev, capsule_current)
                 for index, node in enumerate(nodes):
                         self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), self.combinedTranslation, printFlag=True)
 
-                capsule_prev = capsule_current
+                self.capsule_prev = capsule_current
             else:
-                return
+                break
+            
+
+
+                    
+        # data = self.receive_data(self.dataDiscriptor)
+        # capsule_prev = CapsuleType(data)
+        # capsule_current = None
+        
+        # while True:
+        #     data = self.__receiveData(self.dataDiscriptor)
+        #     capsule_current = CapsuleType(data)
+            
+        #     nodes = CapsuleType._parse_capsule(capsule_prev, capsule_current)
+        #     for index, node in enumerate(nodes):
+        #             yield lidarMeasurement(raw_bytes=None, measurement_hq=node)
+
+        #     capsule_prev = capsule_current
+            
 
 
     def validatePackage(self, pack:bytes, printErrors=False)->bool:
@@ -246,6 +267,8 @@ class Lidar:
         
         if discriptor.sync_byte1 != RPLIDAR_SYNC_BYTE1[0] or discriptor.sync_byte2 != RPLIDAR_SYNC_BYTE2[0]:
             raise RPlidarProtocolError("PyRPlidar Error : sync bytes are mismatched", hex(discriptor.sync_byte1), hex(discriptor.sync_byte2))
+        print(discriptor)
+
         return discriptor
 
     def __receiveData(self, discriptor:RPlidarResponse)->bytes:
@@ -359,6 +382,8 @@ class Lidar:
         """Starts a standard scan on the lidar and starts the update cycle"""
         
         self.__sendCommand(RPLIDAR_CMD_SCAN)
+        self.dataDiscriptor = self.__receiveDiscriptor()
+
         self.setMotorPwm(overrideInternalValue=False)
         
         self.__establishLoop(self.__standardUpdate)
@@ -374,10 +399,13 @@ class Lidar:
         self.lidarSerial.receiveData(RPLIDAR_DESCRIPTOR_LEN)
     
 
-    @DeprecationWarning
+    #@DeprecationWarning
     def startScanExpress(self, mode:int):
-        
+        self.setMotorPwm(overrideInternalValue=False)
         self.__sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
+        sleep(0.001)
+        self.dataDiscriptor = self.__receiveDiscriptor()
+
         self.__establishLoop(self.__capsuleUpdate)
 
         if self.dataDiscriptor.data_type == 0x82:
@@ -389,7 +417,21 @@ class Lidar:
         else:
             raise RPlidarProtocolError("RPlidar Error : scan data type is not supported")
         
+    # def scan_generator(self):
+        
+    #     data = self.receive_data(self.dataDiscriptor)
+    #     capsule_prev = CapsuleType(data)
+    #     capsule_current = None
+        
+    #     while True:
+    #         data = self.__receiveData(self.dataDiscriptor)
+    #         capsule_current = CapsuleType(data)
+            
+    #         nodes = CapsuleType._parse_capsule(capsule_prev, capsule_current)
+    #         for index, node in enumerate(nodes):
+    #                 yield lidarMeasurement(raw_bytes=None, measurement_hq=node)
 
+    #         capsule_prev = capsule_current
             
     def isConnected(self)->bool:
         return self.lidarSerial and self.lidarSerial.isOpen()

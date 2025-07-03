@@ -24,11 +24,14 @@ def run():
     lidar.connect()
     lidar.setMotorPwm(500)
     
-    lidar.getScanModes()
+    #lidar.getScanModes()
     print(lidar.getSampleRate())
     print(lidar.getScanModeTypical())
-    #lidar.startScanExpress(3)
-    lidar.startScan()
+    print(str(lidar.getScanModes()))
+    for item in lidar.getScanModes():
+        print(item)
+    #lidar.startScan()
+    lidar.startScanExpress(3)
     time.sleep(2)
 
     # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],

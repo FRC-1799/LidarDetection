@@ -127,7 +127,7 @@ class RPlidarResponse:
             "sync_byte2" : hex(self.sync_byte2),
             "data_length" : self.data_length,
             "send_mode" : self.send_mode,
-            "data_type" : hex(self.data_type)
+            "data_type" : hex(self.data_type),
         }
         return str(data)
 
@@ -210,7 +210,7 @@ class RPlidarScanMode:
 
 
 
-@DeprecationWarning
+# @DeprecationWarning
 class PyRPlidarMeasurementHQ:
     
     def __init__(self, syncBit, angle_q6, dist_q2):
@@ -227,7 +227,7 @@ class PyRPlidarMeasurementHQ:
 
 
 
-@DeprecationWarning
+# @DeprecationWarning
 class PyRPlidarCabin:
     
     def __init__(self, raw_bytes):
@@ -236,7 +236,7 @@ class PyRPlidarCabin:
         self.d_theta1 = (raw_bytes[4] & 0x0F) + ((raw_bytes[0] & 0x03) << 4)
         self.d_theta2 = (raw_bytes[4] >> 4) + ((raw_bytes[2] & 0x03) << 4)
 
-@DeprecationWarning
+# @DeprecationWarning
 class PyRPlidarScanCapsule:
     
     def __init__(self, raw_bytes):
@@ -301,13 +301,13 @@ class PyRPlidarScanCapsule:
 
 
 
-@DeprecationWarning
+# @DeprecationWarning
 class PyRPlidarDenseCabin:
     
     def __init__(self, raw_bytes):
         self.distance = (raw_bytes[0] << 8) + raw_bytes[1]
 
-@DeprecationWarning
+# @DeprecationWarning
 class PyRPlidarScanDenseCapsule:
 
     def __init__(self, raw_bytes):
@@ -360,7 +360,7 @@ class PyRPlidarScanDenseCapsule:
 
 
 
-@DeprecationWarning
+# @DeprecationWarning
 class PyRPlidarUltraCabin:
     
     def __init__(self, raw_bytes):
@@ -378,7 +378,7 @@ class PyRPlidarUltraCabin:
             "predict2" : hex(self.predict2),
         }
         return str(data)
-@DeprecationWarning
+# @DeprecationWarning
 class PyRPlidarScanUltraCapsule:
 
     def __init__(self, raw_bytes):
