@@ -27,7 +27,7 @@ from lidarLib.LidarConfigs import lidarConfigs
 
 def session(ntPublisher:publisher, shouldLiveSupplier:callable):
     print("session started")
-    lidar0:lidarPipeline = lidarManager.makePipedLidar(lidarConfigs.makeFromJson("lidar0.json"))
+    lidar0:lidarPipeline = lidarManager.makePipedLidar(lidarConfigs.configsFromJson("lidar0.json"))
     # lidar0.connectSmart()
     
     lidars = [lidar0]
@@ -43,7 +43,7 @@ def session(ntPublisher:publisher, shouldLiveSupplier:callable):
         pointMap=[]
         lidarTranslations = []
         for lidar in lidars:
-            if lidar.isConnected():
+            if lidar.isConnected() and lidar.getMap():
                 lidar.addTanslation(ntPublisher.getPoseasTran())
                 hitboxMap.addMap(lidar.getMap())
                 pointMap = pointMap+lidar.getMap().getPoints()

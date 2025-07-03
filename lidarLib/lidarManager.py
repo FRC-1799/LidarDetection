@@ -13,12 +13,17 @@ from lidarLib.translation import translation
 def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     pipeline:"lidarPipeline"=pipeline
     lidar:Lidar = Lidar(lidarConfig)
+
+    if (not lidarConfig.autoConnect):
+        raise ValueError("piped lidars must be created with auto connect on but lidar", lidarConfig.port, "was created as piped with it off")
+
     if (lidarConfig.reportScanModes):
         pipeline.sendScanTypes(lidar.getScanModes())
     if (lidarConfig.reportSampleRate):
         pipeline.sendSampleRate(lidar.getSampleRate())
 
-
+    if (lidarConfig.autoStart):
+        lidar.startScan()
 
     multiexit.register(lidar.disconnect)
     quitCount=0
@@ -82,7 +87,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
             else:
                 pipeline.sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
-        if (lidarConfig.reportData):
+        if (lidarConfig.reportData and lidar.lastMap):
             pipeline.sendMap(lidar.lastMap)
         if (lidarConfig.reportCombinedOffset):
             pipeline.sendTrans(lidar.getCombinedTrans())

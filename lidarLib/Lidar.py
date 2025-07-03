@@ -45,6 +45,9 @@ class Lidar:
         self.globalTranslation=translation.default()
         self.combinedTranslation=translation.default()
 
+        if (config.autoConnect):
+            self.connect()
+
 
         
         
@@ -267,7 +270,7 @@ class Lidar:
         
         if discriptor.sync_byte1 != RPLIDAR_SYNC_BYTE1[0] or discriptor.sync_byte2 != RPLIDAR_SYNC_BYTE2[0]:
             raise RPlidarProtocolError("PyRPlidar Error : sync bytes are mismatched", hex(discriptor.sync_byte1), hex(discriptor.sync_byte2))
-        print(discriptor)
+        #print(discriptor)
 
         return discriptor
 

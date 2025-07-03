@@ -21,7 +21,6 @@ IMAX = 20
 
 def run():
     lidar = Lidar(lidarConfigs.configsFromJson("lidar0.json"))
-    lidar.connect()
     lidar.setMotorPwm(500)
     
     #lidar.getScanModes()
