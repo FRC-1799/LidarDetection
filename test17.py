@@ -30,7 +30,7 @@ def run():
     for item in lidar.getScanModes():
         print(item)
     #lidar.startScan()
-    lidar.startScanExpress(3)
+    lidar.startScanExpress()
     time.sleep(2)
 
     # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],

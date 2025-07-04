@@ -469,7 +469,12 @@ class Lidar:
     
 
     #@DeprecationWarning
-    def startScanExpress(self, mode:int):
+    def startScanExpress(self, mode:int = "auto"):
+
+        if mode == "auto":
+            mode = self.getScanModeTypical()
+
+
         self.setMotorPwm(overrideInternalValue=False)
         self.__sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
         sleep(0.001)
