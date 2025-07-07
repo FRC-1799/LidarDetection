@@ -27,7 +27,11 @@ class lidarConfigs:
         "reportData" : True,
         "reportSampleRate" : True,
         "reportCombinedOffset" : True,
-        "reportScanModes" : True
+        "reportScanModes" : True,
+        "vendorID" : 0x10c4,
+        "productID" : 0xea60,
+        "serialNumber" : None, 
+        "name" : None
     }
 
 
@@ -35,7 +39,10 @@ class lidarConfigs:
 
     def __init__(
                     self, 
-                    port:string,
+                    port:string = defaultConfigs["port"],
+                    vendorID = defaultConfigs["vendorID"],
+                    productID = defaultConfigs["productID"],
+                    serialNumber = defaultConfigs["serialNumber"],
                     localTrans = defaultConfigs['localTrans'], 
                     baudrate = defaultConfigs["baudrate"], 
                     timeout=defaultConfigs["timeout"], 
@@ -49,7 +56,8 @@ class lidarConfigs:
                     reportData=defaultConfigs["reportData"], 
                     reportSampleRate=defaultConfigs["reportSampleRate"], 
                     reportScanModes=defaultConfigs["reportScanModes"], 
-                    reportCombinedOffset=defaultConfigs["reportScanModes"]
+                    reportCombinedOffset=defaultConfigs["reportScanModes"],
+                    name = defaultConfigs["name"]
             ):
 
         self.port=port
@@ -68,6 +76,13 @@ class lidarConfigs:
         self.mode=mode
         self.autoConnect=autoConnect
         self.deadband = deadband
+        self.vendorID=vendorID
+        self.productID = productID
+        self.serialNumber = serialNumber
+        self.name = name
+
+        if not self.port and not self.serialNumber:
+            raise ValueError("Ether a serial number or a port must be specified in a lidar configs object")
 
         if debugMode:
             self.printConfigs()
@@ -88,7 +103,11 @@ class lidarConfigs:
             "\nreportSampleRate:", self.reportSampleRate,
             "\nreportScanModes:", self.reportScanModes,
             "\nreportCombinedOffset:", self.reportCombinedOffset  ,
-            "\nmode:", self.mode           
+            "\nmode:", self.mode,         
+            "\nvendorID: ", self.vendorID,
+            "\nproductID: ", self.productID,
+            "\nserialNumber: ", self.serialNumber,
+            "\nname:", self.name
         )
 
     @classmethod
@@ -99,6 +118,10 @@ class lidarConfigs:
 
                 return cls(
                     port = data.get("port"), 
+                    vendorID = data.get("vendorID", lidarConfigs.defaultConfigs["vendorID"]),
+                    productID = data.get("productID", lidarConfigs.defaultConfigs["productID"]),
+                    serialNumber = data.get("serialNumber", lidarConfigs.defaultConfigs["serialNumber"]),
+
                     localTrans = translation.fromCart(
                         data.get("localTrans").get("x", lidarConfigs.defaultConfigs["localTrans"].x),
                         data.get("localTrans").get("y", lidarConfigs.defaultConfigs["localTrans"].y),
@@ -116,7 +139,9 @@ class lidarConfigs:
                     reportData = data.get("reportData", lidarConfigs.defaultConfigs["reportData"]),
                     reportSampleRate = data.get("reportSampleRate", lidarConfigs.defaultConfigs["reportSampleRate"]),
                     reportScanModes = data.get("reportScanModes", lidarConfigs.defaultConfigs["reportScanModes"]),
-                    reportCombinedOffset = data.get("reportCombinedOffset", lidarConfigs.defaultConfigs["reportCombinedOffset"])
+                    reportCombinedOffset = data.get("reportCombinedOffset", lidarConfigs.defaultConfigs["reportCombinedOffset"]),
+                    name = data.get("name", lidarConfigs.defaultConfigs["name"])
+
                 )
             
 
@@ -150,7 +175,11 @@ class lidarConfigs:
                 "reportData" : self.reportData,
                 "reportSampleRate" : self.reportSampleRate,
                 "reportScanModes" : self.reportScanModes,
-                "reportCombinedOffset" : self.reportCombinedOffset
+                "reportCombinedOffset" : self.reportCombinedOffset,
+                "serialNumber" : self.serialNumber,
+                "productID" : self.productID,
+                "vendorID" : self.vendorID,
+                "name" : self.name,
             }
 
             keysToRemove = []

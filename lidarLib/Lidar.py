@@ -75,7 +75,7 @@ class Lidar:
     def connect(self)->None:
         """Connects lidar object to the spesified port with the specified baud rate but does not check to make sure the port specified contains a lidar. """
         self.lidarSerial = RPlidarSerial()
-        self.lidarSerial.open(self.config.port, self.config.baudrate,timeout=self.config.timeout)
+        self.lidarSerial.open(self.config.port, self.config.vendorID, self.config.productID, self.config.serialNumber, self.config.baudrate,timeout=self.config.timeout)
         print(self.config.port)
         print(self.config.baudrate)
         
