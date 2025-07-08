@@ -5,6 +5,7 @@ from lidarLib.lidarMap import lidarMap
 from lidarLib.Lidar import Lidar
 from enum import Enum
 
+from lidarLib.lidarProtocol import RPlidarDeviceInfo
 from lidarLib.translation import translation
 
 
@@ -133,21 +134,30 @@ class lidarPipeline:
 
 
         return True
-    
-    #util functions
-    def connectSmart(self):
-        self.connect()
 
+
+    def isRunning():
+        # TODO
+        pass
+
+    def disconnect(self, leaveRunning=False)->None:
+        self.sendAction(commandPacket(Lidar.disconnect,[leaveRunning]))
+
+    def stop(self)->None:
+        self.sendAction(commandPacket(Lidar.stop,[]))
     
+    def reset(self)->None:
+        self.sendAction(commandPacket(Lidar.reset,[]))
+    
+    def setMotorPwm(self, pwm:int, overrideInternalValue=True)->None:
+        self.sendAction(commandPacket(Lidar.setMotorPwm,[pwm, overrideInternalValue]))
 
     def connect(self):
         self.sendAction(commandPacket(Lidar.connect,[]))
 
     def getMap(self)->lidarMap:
         return self.getDataPacket(dataPacketType.lidarMap)
-    
-    def setPWM(self, pwmVal:float)->None:
-        self.sendAction(commandPacket(Lidar.setMotorPwm, [pwmVal]))
+
 
     def startScan(self):
         self.sendAction(commandPacket(Lidar.startScan, []))
@@ -159,6 +169,12 @@ class lidarPipeline:
 
     def getTranslation(self)->translation:
         return self.__dataPackets[dataPacketType.translation]           
+
+    def getInfo(self)->RPlidarDeviceInfo:
+        return self.getDataPacket(5)
+
+
+
 
 class commandPacket:
     def __init__(self, function:callable, args:list, returnType:int=-1):
@@ -176,7 +192,8 @@ class dataPacketType:
     quitWarning = 2
     sampleRate = 3
     scanModes = 4
-    options:list[int] = [lidarMap, translation, quitWarning, sampleRate, scanModes]
+    lidarInfo = 5
+    options:list[int] = [lidarMap, translation, quitWarning, sampleRate, scanModes, lidarInfo]
     
 
 class dataPacket():

@@ -17,19 +17,17 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     if (not lidarConfig.autoConnect):
         raise ValueError("piped lidars must be created with auto connect on but lidar", lidarConfig.port, "was created as piped with it off")
 
-    if (lidarConfig.reportScanModes):
-        pipeline.sendScanTypes(lidar.getScanModes())
-    if (lidarConfig.reportSampleRate):
-        pipeline.sendSampleRate(lidar.getSampleRate())
 
-    if (lidarConfig.autoStart):
-        lidar.startScan()
+    pipeline.sendScanTypes(lidar.getScanModes())
+    pipeline.sendSampleRate(lidar.getSampleRate())
+    
+
+    lidar.startScan()
 
     multiexit.register(lidar.disconnect)
     quitCount=0
     timesReset=0
     
-    connectionArgs:list = None
     start =time.perf_counter()
 
     while pipeline.shouldLive:
@@ -87,10 +85,10 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
             else:
                 pipeline.sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
-        if (lidarConfig.reportData and lidar.lastMap):
+        if (lidar.lastMap):
             pipeline.sendMap(lidar.lastMap)
-        if (lidarConfig.reportCombinedOffset):
-            pipeline.sendTrans(lidar.getCombinedTrans())
+        
+        pipeline.sendTrans(lidar.getCombinedTrans())
 
         
 

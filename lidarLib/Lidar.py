@@ -138,7 +138,7 @@ class Lidar:
             self.__update()
             sleep(0.001)
             
-    def restartScan(self)->None:
+    def __restartScan(self)->None:
         """Restarts the running scan, this function only works for simple scans rn and calling it during any other scan type may cause issues"""
         self.stop()
         #self.setMotorPwm(0)
@@ -170,8 +170,8 @@ class Lidar:
             if self.dataDiscriptor and (self.lidarSerial.bufferSize()>=self.dataDiscriptor.data_length):
                 #print("update working")
                 newData=self.__receiveData(self.dataDiscriptor)
-                if not self.validatePackage(newData, printErrors=self.config.debugMode):
-                    self.restartScan()
+                if not self.__validatePackage(newData, printErrors=self.config.debugMode):
+                    self.__restartScan()
                     return
                 self.currentMap.addVal(lidarMeasurement(newData), self.combinedTranslation, printFlag=self.config.debugMode)
             else:
@@ -228,7 +228,7 @@ class Lidar:
             
 
 
-    def validatePackage(self, pack:bytes, printErrors=False)->bool:
+    def __validatePackage(self, pack:bytes, printErrors=False)->bool:
         """Takes a 5 lenght byte pack responce to a standard or forced scan and returns wether or not that scan has all of the correct checksums(and some other checks for legitimacy)"""
         startFlag = bool(pack[0] & 0x1)
         quality = pack[0] >> 2
@@ -313,7 +313,7 @@ class Lidar:
         """Restarts the lidar as if it was just powered on but does not effect the cliant side lidar lib at all"""
         self.__sendCommand(RPLIDAR_CMD_RESET)
 
-    def setMotorPwm(self, pwm:int=0, overrideInternalValue=True)->None:
+    def setMotorPwm(self, pwm:int, overrideInternalValue=True)->None:
         """Sets the lidars motor to the specified pwm value. the speed must be a positive number or 0 and lower or equal to the specified max value(currently 1023)"""
         if pwm<0 or pwm>RPLIDAR_MAX_MOTOR_PWM:
             raise ValueError("lidar pwm was set to a value not within the range: ",pwm)
