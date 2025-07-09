@@ -173,10 +173,10 @@ class RPlidarHealth:
         return str(data)
 
 
-class RPlidarSamplerate:
-    """Class to handle and store samplerate information given by the lidar"""
+class RPlidarSampleRate:
+    """Class to handle and store sampleRate information given by the lidar"""
     def __init__(self, rawBytes:bytes):
-        """creates a lidar samplerate object from the raw byte package returned by thge lidar"""
+        """creates a lidar sampleRate object from the raw byte package returned by thge lidar"""
         self.t_standard = rawBytes[0] + (rawBytes[1] << 8)
         self.t_express = rawBytes[2] + (rawBytes[3] << 8)
     

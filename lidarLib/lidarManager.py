@@ -65,7 +65,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         
 
 
-        for action in pipeline.getActionQue():
+        for action in pipeline._getActionQue():
             if action.function==Lidar.startScan:
                 try:
                     action.function(lidar, *action.args)
@@ -88,7 +88,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
                 pipeline._sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
         if (lidar.__lastMap):
-            pipeline.sendMap(lidar.__lastMap)
+            pipeline._sendMap(lidar.__lastMap)
         
         pipeline._sendTrans(lidar.getCombinedTrans())
 
@@ -96,6 +96,8 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
         if (start+0.02-time.perf_counter())>0:
             time.sleep(start+0.02-time.perf_counter())
+
+        
         start+=0.02
 
     print("lidar shut down")
@@ -106,8 +108,8 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
 def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
     """
-        Creates a seperate prosses that handles all rendering and can be updated via a pipe(connection)
-        returns a tuple with the first argument being the process, this can be use cancle the process but the primary use is to be saved so the renderer doesnt get collected
+        Creates a separate posses that handles all rendering and can be updated via a pipe(connection)
+        returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesnt get collected
         the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodicly so they can be rendered. 
         WARNING all code that deals with the pipe should be surrounded by a try except block as the pipe will start to throw errors whenever the user closes the render machine.
     """

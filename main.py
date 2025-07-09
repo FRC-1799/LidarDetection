@@ -47,7 +47,7 @@ def session(ntPublisher:publisher, shouldLiveSupplier:callable):
                 lidar.setCurrentLocalTranslation(ntPublisher.getPoseasTran())
                 hitboxMap.addMap(lidar.getLastMap())
                 pointMap = pointMap+lidar.getLastMap().getPoints()
-                lidarTranslations.append(lidar.getTranslation())
+                lidarTranslations.append(lidar.getCombinedTranslation())
                 
         
         ntPublisher.publishHitboxesFromHitboxMap(hitboxMap)
