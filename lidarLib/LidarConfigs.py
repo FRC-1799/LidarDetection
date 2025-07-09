@@ -1,4 +1,3 @@
-import string
 import json
 
 
@@ -35,7 +34,7 @@ class lidarConfigs:
 
     def __init__(
                     self, 
-                    port:string = defaultConfigs["port"],
+                    port:str = defaultConfigs["port"],
                     vendorID = defaultConfigs["vendorID"],
                     productID = defaultConfigs["productID"],
                     serialNumber = defaultConfigs["serialNumber"],
@@ -51,6 +50,7 @@ class lidarConfigs:
                     defaultSpeed=defaultConfigs["defaultSpeed"],
                     name = defaultConfigs["name"]
             ):
+
 
         self.port=port
         self.localTrans = localTrans
@@ -77,7 +77,7 @@ class lidarConfigs:
             self.printConfigs()
             
     def printConfigs(self):
-        print("new lidarConfig created with args", 
+        print("lidarConfig args", 
             "\nport:", self.port,
             "\nlocalTrans:", self.localTrans,
             "\nbaudrate:", self.baudrate,
@@ -134,7 +134,7 @@ class lidarConfigs:
             print(f"Error: Invalid JSON format in file: [path]")
             return None
 
-    def writeToJson(self, path:string):
+    def writeToJson(self, path:str):
         try:
             data = {
                 

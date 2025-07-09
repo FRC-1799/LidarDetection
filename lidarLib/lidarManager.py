@@ -37,6 +37,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         
 
         if not pipeline.isConnected():
+            time.sleep(0.1)
             break
 
 
@@ -111,7 +112,6 @@ def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
         Creates a separate posses that handles all rendering and can be updated via a pipe(connection)
         returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesnt get collected
         the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodicly so they can be rendered. 
-        WARNING all code that deals with the pipe should be surrounded by a try except block as the pipe will start to throw errors whenever the user closes the render machine.
     """
     returnPipe, lidarPipe = Pipe(duplex=True)
     returnPipe=lidarPipeline(returnPipe)
