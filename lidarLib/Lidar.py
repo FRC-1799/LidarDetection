@@ -553,6 +553,4 @@ class Lidar:
             If the second argument is larger than the first the deadband will be assumed to wrap past 360 degrees. 
         """
         self.config.deadband=deadband
-        self.currentMap.setDeadband(
-            
-        )
+        self.currentMap.setDeadband(deadband)

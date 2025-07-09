@@ -1,4 +1,3 @@
-import string
 import json
 
 
@@ -29,7 +28,7 @@ class lidarConfigs:
     defaultMode="normal"
 
 
-    def __init__(self, port:string, localTrans = defaultLocalTrans, baudrate = defaultBaudrate, timeout=defaultTimeout, mode=defaultMode, deadband=defaultDeadband, debugMode=defaultDebugMode,
+    def __init__(self, port:str, localTrans = defaultLocalTrans, baudrate = defaultBaudrate, timeout=defaultTimeout, mode=defaultMode, deadband=defaultDeadband, debugMode=defaultDebugMode,
                 isStop=defaultIsStop, autoStart=defaultAutoStart, autoConnect=defaultAutoConnect, defaultSpeed=defaultDefaultSpeed,
                 reportData=defaultReportData, reportSampleRate=defaultReportSampleRate, reportScanModes=defaultReportScanModes, reportCombinedOffset=defaultReportCombinedOffset):
         self.port=port
@@ -53,7 +52,7 @@ class lidarConfigs:
             self.printConfigs()
             
     def printConfigs(self):
-        print("new lidarConfig created with args", 
+        print("lidarConfig args", 
             "\nport:", self.port,
             "\nlocalTrans:", self.localTrans,
             "\nbaudrate:", self.baudrate,
