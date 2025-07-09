@@ -27,7 +27,7 @@ class Lidar:
         self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
-        self.lastMap=lidarMap(self)
+        self.__lastMap=lidarMap(self)
         #self.eventLoop()
         #self.deadband=deadband
         self.config = config
@@ -475,7 +475,7 @@ class Lidar:
         if mode == "auto":
             mode = self.getScanModeTypical()
 
-        if not isinstance(mode, int) or mode not in range(0,5):
+        if mode not in range(0,5):
             raise ValueError("mode value must be \"auto\" or an integer in range 0-4 instead of the given", mode)
 
         self.setMotorPwm(overrideInternalValue=False)
@@ -516,7 +516,7 @@ class Lidar:
     def getCombinedTrans(self)->translation:
         return self.combinedTranslation
     
-    def forceScan(self)->None:
+    def startForceScan(self)->None:
         """
             Initalizes a force scan. 
             Since force scans use the same return packets as normal scans it may apear that the lidarlib initalized a normal scan and not a force scan but all data will be handled properly
@@ -525,13 +525,13 @@ class Lidar:
         self.__establishLoop(self.__standardUpdate)
 
     
-    def mapIsDone(self)->None:
+    def _mapIsDone(self)->None:
         """Handles all the cleanup that is needed when a scan map is done and a new one needs to be initalized"""
-        self.lastMap=self.currentMap
-        self.currentMap=lidarMap(self, mapID=self.lastMap.mapID+1, deadband=self.config.deadband, sensorThetaOffset=self.localTranslation.theta)
+        self.__lastMap=self.currentMap
+        self.currentMap=lidarMap(self, mapID=self.__lastMap.mapID+1, deadband=self.config.deadband, sensorThetaOffset=self.localTranslation.theta)
         if self.config.debugMode:
             print("map swap attempted")
-            print(len(self.lastMap.getPoints()),self.lastMap.len, self.lastMap.mapID, self.lastMap.getRange(), self.lastMap.getHz(), self.lastMap.getPeriod())
+            print(len(self.__lastMap.getPoints()),self.__lastMap.len, self.__lastMap.mapID, self.__lastMap.getRange(), self.__lastMap.getHz(), self.__lastMap.getPeriod())
             print(len(self.currentMap.getPoints()),self.currentMap.len ,self.currentMap.mapID)
         
         #print(self.currentMap.points==self.lastMap.points)
@@ -564,3 +564,6 @@ class Lidar:
         self.currentMap.setDeadband(
             
         )
+
+    def getLastMap(self)->lidarMap:
+        return self.__lastMap

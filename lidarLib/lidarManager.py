@@ -18,9 +18,11 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         raise ValueError("piped lidars must be created with auto connect on but lidar", lidarConfig.port, "was created as piped with it off")
 
 
-    pipeline.sendScanTypes(lidar.getScanModes())
-    pipeline.sendSampleRate(lidar.getSampleRate())
-    
+    pipeline._sendScanTypes(lidar.getScanModes())
+    pipeline._sendSampleRate(lidar.getSampleRate())
+    pipeline._sendLidarInfo(lidar.getInfo())
+    pipeline._sendScanModeTypical(lidar.getScanModeTypical())
+    pipeline._sendScanModeCount(lidar.getScanModeCount())
 
     lidar.startScan()
 
@@ -46,7 +48,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
                 lidar.disconnect()
 
                 timesReset+= 1
-                pipeline.sendData(dataPacket(dataPacketType.quitWarning), timesReset)
+                pipeline._sendData(dataPacket(dataPacketType.quitWarning), timesReset)
                 time.sleep(0.001)
 
                 lidar:Lidar = Lidar(lidarConfigs)
@@ -59,7 +61,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         
 
         if pipeline.getDataPacket(dataPacketType.translation):
-            lidar.setCurrentGlobalTranslaisConnectedtion(pipeline.getDataPacket(dataPacketType.translation))
+            lidar.setCurrentGlobalTranslation(pipeline.getDataPacket(dataPacketType.translation))
         
 
 
@@ -83,12 +85,12 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
             elif action.returnType==-1:
                 action.function(lidar, *action.args)
             else:
-                pipeline.sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
+                pipeline._sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
-        if (lidar.lastMap):
-            pipeline.sendMap(lidar.lastMap)
+        if (lidar.__lastMap):
+            pipeline.sendMap(lidar.__lastMap)
         
-        pipeline.sendTrans(lidar.getCombinedTrans())
+        pipeline._sendTrans(lidar.getCombinedTrans())
 
         
 

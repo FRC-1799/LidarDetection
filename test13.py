@@ -41,7 +41,7 @@ def run():
     try:
         while pipe.isConnected():
             
-            pipe.send(lidar.getMap())
+            pipe.send(lidar.getLastMap())
             time.sleep(0.1)
             #print("data sent", lidar.lastMap.mapID)
     except Exception as e:

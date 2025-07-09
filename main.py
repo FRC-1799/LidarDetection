@@ -43,10 +43,10 @@ def session(ntPublisher:publisher, shouldLiveSupplier:callable):
         pointMap=[]
         lidarTranslations = []
         for lidar in lidars:
-            if lidar.isConnected() and lidar.getMap():
-                lidar.addTanslation(ntPublisher.getPoseasTran())
-                hitboxMap.addMap(lidar.getMap())
-                pointMap = pointMap+lidar.getMap().getPoints()
+            if lidar.isConnected() and lidar.getLastMap():
+                lidar.setCurrentLocalTranslation(ntPublisher.getPoseasTran())
+                hitboxMap.addMap(lidar.getLastMap())
+                pointMap = pointMap+lidar.getLastMap().getPoints()
                 lidarTranslations.append(lidar.getTranslation())
                 
         
@@ -56,7 +56,7 @@ def session(ntPublisher:publisher, shouldLiveSupplier:callable):
 
 
     for lidar in lidars:
-        lidar.sendQuitReqeust()
+        lidar.sendQuitRequest()
     time.sleep(1)
     print("session terminated")
 

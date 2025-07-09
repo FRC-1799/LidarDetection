@@ -1,11 +1,12 @@
 from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
+from time import time
 
 from lidarLib.lidarMap import lidarMap
 from lidarLib.Lidar import Lidar
 from enum import Enum
 
-from lidarLib.lidarProtocol import RPlidarDeviceInfo
+from lidarLib.lidarProtocol import RPlidarDeviceInfo, RPlidarHealth, RPlidarSamplerate
 from lidarLib.translation import translation
 
 
@@ -16,6 +17,8 @@ class lidarPipeline:
         self.__pipe=pipe
         self.__dataPackets = []
         self.host=host
+
+
 
         for type in dataPacketType.options:
             print(type)
@@ -98,30 +101,43 @@ class lidarPipeline:
     def sendMap(self, map:lidarMap)->None:
         """Sends the inputed lidar map to the other side of the pipe(aka the render machinel)"""
         
-        self.sendData(dataPacket(dataPacketType.lidarMap, map))
+        self._sendData(dataPacket(dataPacketType.lidarMap, map))
 
-    def sendTrans(self, translation:translation):
-        self.sendData(dataPacket(dataPacketType.translation, translation))
+    def _sendTrans(self, translation:translation):
+        self._sendData(dataPacket(dataPacketType.translation, translation))
 
-    def sendSampleRate(self, sampleRate):
-        self.sendData(dataPacket(dataPacketType.sampleRate, sampleRate))
+    def _sendSampleRate(self, sampleRate):
+        self._sendData(dataPacket(dataPacketType.sampleRate, sampleRate))
 
-    def sendScanTypes(self, scanTypes):
-        self.sendData(dataPacket(dataPacketType.scanModes, scanTypes))
+    def _sendScanTypes(self, scanTypes):
+        self._sendData(dataPacket(dataPacketType.scanModes, scanTypes))
 
-    def sendData(self, data:"dataPacket"):
+    def _sendLidarInfo(self, lidarInfo):
+        self._sendData(dataPacket(dataPacketType.lidarInfo, lidarInfo))
+
+    def _sendLidarHealth(self, lidarHealth):
+        self._sendData(dataPacket(dataPacketType.lidarHealth, lidarHealth))
+
+    def _sendScanModeTypical(self, scanMode):
+        self._sendData(dataPacket(dataPacketType.scanModeTypical, scanMode))
+
+    def _sendScanModeCount(self, scanModeCount):
+        self._sendData(dataPacket(dataPacketType.scanModeCount, scanModeCount))
+
+
+    def _sendData(self, data:"dataPacket"):
         if (data.__class__!= dataPacket and data.type not in dataPacketType.options):
             raise ValueError("Attempted to send data over a lidar pipleine with an invalid data type packet")
         self.__pipe.send(data)
 
-    def sendAction(self, action:"commandPacket"):
+    def _sendAction(self, action:"commandPacket"):
         if action.__class__ != commandPacket:
             raise ValueError("Attmpted to send action throught the lidar pipline that wasnt an action")
         self.__pipe.send(action)
     
 
-    def sendQuitReqeust(self):
-        self.__get()
+
+    def sendQuitRequest(self):
         self.__pipe.send(quitPacket())
 
     def isConnected(self)->bool:
@@ -136,44 +152,68 @@ class lidarPipeline:
         return True
 
 
-    def isRunning():
+    def isRunning(self):
         # TODO
+        return self.getLastMap().endTime + 10/self.getLastMap().getHz > time()
         pass
 
     def disconnect(self, leaveRunning=False)->None:
-        self.sendAction(commandPacket(Lidar.disconnect,[leaveRunning]))
+        self._sendAction(commandPacket(Lidar.disconnect,[leaveRunning]))
 
     def stop(self)->None:
-        self.sendAction(commandPacket(Lidar.stop,[]))
+        self._sendAction(commandPacket(Lidar.stop,[]))
     
     def reset(self)->None:
-        self.sendAction(commandPacket(Lidar.reset,[]))
+        self._sendAction(commandPacket(Lidar.reset,[]))
     
     def setMotorPwm(self, pwm:int, overrideInternalValue=True)->None:
-        self.sendAction(commandPacket(Lidar.setMotorPwm,[pwm, overrideInternalValue]))
+        self._sendAction(commandPacket(Lidar.setMotorPwm,[pwm, overrideInternalValue]))
 
     def connect(self):
-        self.sendAction(commandPacket(Lidar.connect,[]))
+        self._sendAction(commandPacket(Lidar.connect,[]))
 
-    def getMap(self)->lidarMap:
+    def getLastMap(self)->lidarMap:
         return self.getDataPacket(dataPacketType.lidarMap)
 
 
     def startScan(self):
-        self.sendAction(commandPacket(Lidar.startScan, []))
+        self._sendAction(commandPacket(Lidar.startScan, []))
 
+    def startScanExpress(self, mode:int="auto"):
+        self._sendAction(commandPacket(Lidar.startScanExpress, [mode]))
+
+    def startForceScan(self):
+        self._sendAction(commandPacket(Lidar.startForceScan, []))
         
-    def addTanslation(self, translation:translation):
-        self.sendAction(commandPacket(Lidar.setCurrentLocalTranslation, [translation]))
-        self.sendAction(commandPacket(Lidar.getCombinedTrans, [], 1))
+    def setCurrentLocalTranslation(self, translation:translation):
+        self._sendAction(commandPacket(Lidar.setCurrentLocalTranslation, [translation]))
+        # self._sendAction(commandPacket(Lidar.getCombinedTrans, [], 1))
+
+    def setCurrentGlobalTranslation(self, translation:translation):
+        self._sendAction(commandPacket(Lidar.setCurrentGlobalTranslation, [translation]))
+
+    def setDeadband(self, deadband)->None:
+        self._sendAction(commandPacket(Lidar.setDeadband, [deadband]))
 
     def getTranslation(self)->translation:
         return self.__dataPackets[dataPacketType.translation]           
 
     def getInfo(self)->RPlidarDeviceInfo:
-        return self.getDataPacket(5)
+        return self.getDataPacket(dataPacketType.lidarInfo)
 
+    def getHealth(self)->RPlidarHealth:
+        return self.getDataPacket(dataPacketType.lidarHealth)
+    
+    def getSampleRate(self)->RPlidarSamplerate:
+        return self.getDataPacket(dataPacketType.sampleRate)
 
+    def getScanModeTypical(self)->int:
+        return self.getDataPacket(dataPacketType.scanModeTypical)
+
+    def getScanModeCount(self)->int:
+        return self.getDataPacket(dataPacketType.scanModeCount)
+    
+        
 
 
 class commandPacket:
@@ -193,7 +233,14 @@ class dataPacketType:
     sampleRate = 3
     scanModes = 4
     lidarInfo = 5
-    options:list[int] = [lidarMap, translation, quitWarning, sampleRate, scanModes, lidarInfo]
+    lidarHealth = 6
+    scanModeTypical=7
+    scanModeCount=8
+    options:list[int] = [
+        lidarMap, translation, quitWarning,
+        sampleRate, scanModes, lidarInfo,
+        lidarHealth, scanModeTypical, scanModeCount
+    ]
     
 
 class dataPacket():

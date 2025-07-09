@@ -41,7 +41,7 @@ def run():
 
 def printPointLocations(lidar: Lidar):
     # Iterate through the points from the lidar map
-    for point in lidar.lastMap.getPoints():
+    for point in lidar.__lastMap.getPoints():
         cart_vals = point.getCart()  # Get Cartesian coordinates (x, y)
         x, y = cart_vals
 
