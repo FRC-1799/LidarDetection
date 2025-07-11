@@ -19,9 +19,11 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         raise ValueError("piped lidars must be created with auto connect on but lidar", lidarConfig.port, "was created as piped with it off")
 
 
-    pipeline.sendScanTypes(lidar.getScanModes())
-    pipeline.sendSampleRate(lidar.getSampleRate())
-    
+    pipeline._sendScanTypes(lidar.getScanModes())
+    pipeline._sendSampleRate(lidar.getSampleRate())
+    pipeline._sendLidarInfo(lidar.getInfo())
+    pipeline._sendScanModeTypical(lidar.getScanModeTypical())
+    pipeline._sendScanModeCount(lidar.getScanModeCount())
 
     lidar.startScan()
 
@@ -36,6 +38,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         
 
         if not pipeline.isConnected():
+            time.sleep(0.1)
             break
 
 
@@ -47,7 +50,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
                 lidar.disconnect()
 
                 timesReset+= 1
-                pipeline.sendData(dataPacket(dataPacketType.quitWarning), timesReset)
+                pipeline._sendData(dataPacket(dataPacketType.quitWarning), timesReset)
                 time.sleep(0.001)
 
                 lidar:Lidar = Lidar(lidarConfigs)
@@ -60,11 +63,11 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
         
 
         if pipeline.getDataPacket(dataPacketType.translation):
-            lidar.setCurrentGlobalTranslaisConnectedtion(pipeline.getDataPacket(dataPacketType.translation))
+            lidar.setCurrentGlobalTranslation(pipeline.getDataPacket(dataPacketType.translation))
         
 
 
-        for action in pipeline.getActionQue():
+        for action in pipeline._getActionQue():
             if action.function==Lidar.startScan:
                 try:
                     action.function(lidar, *action.args)
@@ -84,17 +87,19 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
             elif action.returnType==-1:
                 action.function(lidar, *action.args)
             else:
-                pipeline.sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
+                pipeline._sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
-        if (lidar.lastMap):
-            pipeline.sendMap(lidar.lastMap)
+        if (lidar.__lastMap):
+            pipeline._sendMap(lidar.__lastMap)
         
-        pipeline.sendTrans(lidar.getCombinedTrans())
+        pipeline._sendTrans(lidar.getCombinedTrans())
 
         
 
         if (start+0.02-time.perf_counter())>0:
             time.sleep(start+0.02-time.perf_counter())
+
+        
         start+=0.02
 
     print("lidar shut down")
@@ -105,10 +110,9 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
 
 def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
     """
-        Creates a seperate prosses that handles all rendering and can be updated via a pipe(connection)
-        returns a tuple with the first argument being the process, this can be use cancle the process but the primary use is to be saved so the renderer doesnt get collected
-        the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodicly so they can be rendered. 
-        WARNING all code that deals with the pipe should be surrounded by a try except block as the pipe will start to throw errors whenever the user closes the render machine.
+        Creates a separate posses that handles all rendering and can be updated via a pipe(connection)
+        returns a tuple with the first argument being the process, this can be use cancel the process but the primary use is to be saved so the renderer doesn't get collected
+        the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodically so they can be rendered. 
     """
 
 
