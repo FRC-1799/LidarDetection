@@ -96,7 +96,7 @@ class lidarConfigs:
         )
 
     @classmethod
-    def configsFromJson(cls:"lidarConfigs", path:string)->"lidarConfigs":
+    def configsFromJson(cls:"lidarConfigs", path:str)->"lidarConfigs":
         try:
             with open(path, 'r') as file:
                 data:dict = json.load(file)
