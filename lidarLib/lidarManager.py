@@ -25,7 +25,6 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     pipeline._sendScanModeTypical(lidar.getScanModeTypical())
     pipeline._sendScanModeCount(lidar.getScanModeCount())
 
-    lidar.startScan()
 
     multiexit.register(lidar.disconnect)
     quitCount=0
