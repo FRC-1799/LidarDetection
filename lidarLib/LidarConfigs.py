@@ -47,7 +47,7 @@ class lidarConfigs:
                     debugMode=defaultConfigs["debugMode"],
                     isStop=defaultConfigs["isStop"], 
                     autoStart=defaultConfigs["autoStart"], 
-                    autoConnect=defaultConfigs["auotConnect"], 
+                    autoConnect=defaultConfigs["autoConnect"], 
                     defaultSpeed=defaultConfigs["defaultSpeed"],
                     name = defaultConfigs["name"]
             ):

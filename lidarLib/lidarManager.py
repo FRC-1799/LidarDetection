@@ -11,6 +11,7 @@ import stop
 from lidarLib.translation import translation
 
 def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
+    print("Manager start")
     pipeline:"lidarPipeline"=pipeline
     lidar:Lidar = Lidar(lidarConfig)
 
@@ -109,6 +110,9 @@ def makePipedLidar(lidarConfig:lidarConfigs)-> "lidarPipeline":
         the second argument is one end of a pipe that is used to update the render engine. this pipe should be passed new lidar maps periodicly so they can be rendered. 
         WARNING all code that deals with the pipe should be surrounded by a try except block as the pipe will start to throw errors whenever the user closes the render machine.
     """
+
+
+    print("manager")
     returnPipe, lidarPipe = Pipe(duplex=True)
     returnPipe=lidarPipeline(returnPipe)
     lidarPipe=lidarPipeline(lidarPipe)

@@ -14,11 +14,6 @@ import os
 
 #Checks if the lidar library is running on root. this check will be run once when the lidar module is first imported.
 
-if (os.geteuid()!=0):
-    print("WARNING: The lidar library expects to be run with root perms (via sudo) and may not perform correctly otherwise")
-    sleep(2)
-
-
 
 class Lidar:
     """class to handle, read, and translate data from a RPlidar (only A2M12 has been tested but should work for all)"""
@@ -313,7 +308,7 @@ class Lidar:
         """Restarts the lidar as if it was just powered on but does not effect the cliant side lidar lib at all"""
         self.__sendCommand(RPLIDAR_CMD_RESET)
 
-    def setMotorPwm(self, pwm:int, overrideInternalValue=True)->None:
+    def setMotorPwm(self, pwm:int=0, overrideInternalValue=True)->None:
         """Sets the lidars motor to the specified pwm value. the speed must be a positive number or 0 and lower or equal to the specified max value(currently 1023)"""
         if pwm<0 or pwm>RPLIDAR_MAX_MOTOR_PWM:
             raise ValueError("lidar pwm was set to a value not within the range: ",pwm)
@@ -454,7 +449,7 @@ class Lidar:
         self.__sendCommand(RPLIDAR_CMD_SCAN)
         self.dataDiscriptor = self.__receiveDiscriptor()
 
-        self.setMotorPwm(overrideInternalValue=False)
+        self.setMotorPwm(self.config.defaultSpped, overrideInternalValue=False)
         
         self.__establishLoop(self.__standardUpdate)
 
@@ -478,7 +473,7 @@ class Lidar:
         if not isinstance(mode, int) or mode not in range(0,5):
             raise ValueError("mode value must be \"auto\" or an integer in range 0-4 instead of the given", mode)
 
-        self.setMotorPwm(overrideInternalValue=False)
+        self.setMotorPwm(self.config.defaultSpeed, overrideInternalValue=False)
         self.__sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
         sleep(0.001)
         self.dataDiscriptor = self.__receiveDiscriptor()
