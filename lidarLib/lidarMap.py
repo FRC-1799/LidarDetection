@@ -60,7 +60,7 @@ class lidarMap:
 
         if point.start_flag:
             self.endTime=point.timeStamp
-            self.hostLidar.mapIsDone()
+            self.hostLidar._mapIsDone()
             return
 
         if point.quality==0 or point.distance==0:

@@ -89,8 +89,8 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
             else:
                 pipeline._sendData(dataPacket(action.returnType, action.function(lidar, *action.args)))
 
-        if (lidar.__lastMap):
-            pipeline._sendMap(lidar.__lastMap)
+        if (lidar.getLastMap()):
+            pipeline._sendMap(lidar.getLastMap())
         
         pipeline._sendTrans(lidar.getCombinedTrans())
 

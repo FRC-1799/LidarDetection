@@ -1,7 +1,7 @@
 
 '''Animates distances and measurement quality'''
 from lidarLib.LidarConfigs import lidarConfigs
-from lidarLib.lidarmeasurement import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import matplotlib.pyplot as plot
 import numpy as np

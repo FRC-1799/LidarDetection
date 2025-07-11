@@ -1,5 +1,6 @@
 
 from time import sleep
+import time
 from lidarLib.LidarConfigs import lidarConfigs
 from lidarLib.rplidarSerial import RPlidarSerial
 from lidarLib.lidarProtocol import *
@@ -79,7 +80,8 @@ class Lidar:
         else:
             self.readToCapsule=None
             raise ConnectionError("could not find lidar unit")
-        
+        # self.stop()
+        # time.sleep(4)
 
         self.__getHealth()
         self.__getInfo()
@@ -90,8 +92,10 @@ class Lidar:
         
         if self.config.autoStart:
             if self.config.mode=="normal":
+                print("starting in normal")
                 self.startScan()
             if self.config.mode == "express":
+                print("starting in express")
                 self.startScanExpress()
         
 
@@ -105,6 +109,8 @@ class Lidar:
             Establishes the update loop thread as well as fetching a scan descriptor
             if reset loop is set to false the function will only fetch the descriptor and change the update function but it will not tamper with the update thread
         """
+        
+
         self.__update=updateFunc
         if resetLoop:
             self.loop = threading.Thread(target=self.__updateLoop, daemon=True)
@@ -265,6 +271,14 @@ class Lidar:
         if self.lidarSerial == None:
             raise RPlidarConnectionError("PyRPlidar Error : device is not connected")
         
+        count=0
+        while self.lidarSerial.bufferSize()<7:
+            sleep(0.0001)
+            count+=0.0001
+            if count>10:
+                raise RPlidarConnectionError("did not recive connection responce from RPlidar:", self.configs.name)
+
+
         descriptor = RPlidarResponse(self.lidarSerial.receiveData(RPLIDAR_DESCRIPTOR_LEN))
         
         if descriptor.sync_byte1 != RPLIDAR_SYNC_BYTE1[0] or descriptor.sync_byte2 != RPLIDAR_SYNC_BYTE2[0]:
@@ -281,6 +295,7 @@ class Lidar:
             raise RPlidarConnectionError("PyRPlidar Error : device is not connected")
         
         data = self.lidarSerial.receiveData(descriptor.data_length)
+        #print(data)
         if len(data) != descriptor.data_length:
             raise RPlidarProtocolError()
         return data
@@ -471,10 +486,14 @@ class Lidar:
             Starts a standard scan on the lidar and starts the update cycle.
         """
         
+        if self.isRunning():
+            raise RuntimeError("Attempted to start a scan on lidar", self.config.name,
+                                "while a scan was already running. Please stop a scan before starting another one as running 2 at once can cause issues.")
+
         self.__sendCommand(RPLIDAR_CMD_SCAN)
         self.dataDescriptor = self.__receiveDescriptor()
 
-        self.setMotorPwm(self.config.defaultSpped, overrideInternalValue=False)
+        self.setMotorPwm(self.config.defaultSpeed, overrideInternalValue=False)
         
         self.__establishLoop(self.__standardUpdate)
 
@@ -497,6 +516,11 @@ class Lidar:
             If mode is set to \"auto\" or not set at all the lidar will instead start and express scan in the recommended mode for the given model.
             WARNING. The lidar lib does not check that a specified express mode is supported by the connected lidar. This must be done by the user.
         """
+
+        if self.isRunning():
+            raise RuntimeError("Attempted to start a scan on lidar", self.config.name,
+                                "while a scan was already running. Please stop a scan before starting another one as running 2 at once can cause issues.")
+
         if mode == "auto":
             mode = self.getScanModeTypical()
 
@@ -505,8 +529,8 @@ class Lidar:
 
         self.setMotorPwm(self.config.defaultSpeed, overrideInternalValue=False)
         self.__sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
-        sleep(0.001)
         self.dataDescriptor = self.__receiveDescriptor()
+        print(self.dataDescriptor)
 
         self.__establishLoop(self.__capsuleUpdate)
 
