@@ -5,7 +5,7 @@ from lidarLib.rplidarSerial import RPlidarSerial
 from lidarLib.lidarProtocol import *
 import lidarLib.lidarProtocol
 from lidarLib.lidarMap import lidarMap
-from lidarLib.lidarMeasurment import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 import threading
 from lidarLib.translation import translation
 from typing import Callable
@@ -23,7 +23,7 @@ if (os.geteuid()!=0):
 class Lidar:
     """class to handle, read, and translate data from a RPlidar (only A2M12 has been tested but should work for all)"""
     def __init__(self, config:lidarConfigs):
-        """initalizes lidar object but does not attempt to connect or start any scans"""
+        """initializes lidar object but does not attempt to connect or start any scans"""
         self.lidarSerial = None
         self.measurements = None
         self.currentMap=lidarMap(self)
@@ -118,7 +118,7 @@ class Lidar:
     def disconnect(self, leaveRunning=False)->None:
         """
             Disconnects the lidar from a connected port
-            Before disconnecting the function will stop the lidar motor and scan(if aplicable) unless leaveRunning is set to true
+            Before disconnecting the function will stop the lidar motor and scan(if applicable) unless leaveRunning is set to true
         """
 
         if self.lidarSerial is not None:
@@ -164,7 +164,7 @@ class Lidar:
     def __standardUpdate(self)->None:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
-            actual update function for standard and force scans. Will read the buffer into new measurments which are passed into the current map
+            actual update function for standard and force scans. Will read the buffer into new measurements which are passed into the current map
         """
         
         while not self.isDone:
@@ -186,7 +186,7 @@ class Lidar:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
             DEPRECATED
-            actual update function for express scans. Will read the buffer into new measurments which are passed into the current map
+            actual update function for express scans. Will read the buffer into new measurements which are passed into the current map
             since the express scan is currently deprecated in this library this function should never be called
         """
 
@@ -197,7 +197,7 @@ class Lidar:
         
         while not self.isDone:
             #print("update")
-            #print(self.datadescriptor, self.lidarSerial.bufferSize())
+            #print(self.dataDescriptor, self.lidarSerial.bufferSize())
             if self.dataDescriptor and (self.lidarSerial.bufferSize()>=self.dataDescriptor.data_length):
                 #print("data read")
                 data = self.__receiveData(self.dataDescriptor)
@@ -213,25 +213,11 @@ class Lidar:
             
 
 
-                    
-        # data = self.receive_data(self.datadescriptor)
-        # capsule_prev = CapsuleType(data)
-        # capsule_current = None
-        
-        # while True:
-        #     data = self.__receiveData(self.datadescriptor)
-        #     capsule_current = CapsuleType(data)
-            
-        #     nodes = CapsuleType._parse_capsule(capsule_prev, capsule_current)
-        #     for index, node in enumerate(nodes):
-        #             yield lidarMeasurement(raw_bytes=None, measurement_hq=node)
-
-        #     capsule_prev = capsule_current
-            
+                
 
 
     def __validatePackage(self, pack:bytes, printErrors=False)->bool:
-        """Takes a 5 lenght byte pack responce to a standard or forced scan and returns wether or not that scan has all of the correct checksums(and some other checks for legitimacy)"""
+        """Takes a 5 length byte pack response to a standard or forced scan and returns wether or not that scan has all of the correct checksums(and some other checks for legitimacy)"""
         startFlag = bool(pack[0] & 0x1)
         quality = pack[0] >> 2
         angle = ((pack[1] >> 1) + (pack[2] << 7)) / 64.0

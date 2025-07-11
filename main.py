@@ -1,10 +1,10 @@
 
-'''Animates distances and measurment quality'''
+'''Animates distances and measurement quality'''
 
 from multiprocessing import Process
 import threading
 from constants import constants
-from lidarLib.lidarMeasurment import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import matplotlib.pyplot as plot
 import numpy as np
@@ -44,14 +44,14 @@ def session(ntPublisher:publisher, shouldLiveSupplier:callable):
         lidarTranslations = []
         for lidar in lidars:
             if lidar.isConnected() and lidar.getLastMap():
-                lidar.setCurrentLocalTranslation(ntPublisher.getPoseasTran())
+                lidar.setCurrentLocalTranslation(ntPublisher.getPoseAsTran())
                 hitboxMap.addMap(lidar.getLastMap())
                 pointMap = pointMap+lidar.getLastMap().getPoints()
                 lidarTranslations.append(lidar.getCombinedTranslation())
                 
         
         ntPublisher.publishHitboxesFromHitboxMap(hitboxMap)
-        ntPublisher.publishPointsFromLidarMeasurments(pointMap)
+        ntPublisher.publishPointsFromLidarMeasurements(pointMap)
         ntPublisher.publishLidarPosesFromTrans(lidarTranslations)
 
 
@@ -72,12 +72,12 @@ def main():
 
     while True:
         print("while cycle")
-        if (ntPublisher.isConnected()or constants.overrideNTConnectionRequirment) and not thread.is_alive():
+        if (ntPublisher.isConnected()or constants.overrideNTConnectionRequirement) and not thread.is_alive():
             thread = threading.Thread(target=session, daemon=True, kwargs={"ntPublisher":ntPublisher, "shouldLiveSupplier":ntPublisher.isConnected})
             thread.start()
             
 
-        if (not ntPublisher.isConnected() and not constants.overrideNTConnectionRequirment) and thread.is_alive():
+        if (not ntPublisher.isConnected() and not constants.overrideNTConnectionRequirement) and thread.is_alive():
             thread.join(5)
             if thread.is_alive:
                 print("Lidar thread did not properly terminate")

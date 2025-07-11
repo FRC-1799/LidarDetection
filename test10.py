@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''Animates distances and measurement quality'''
 import math
-from lidarLib.lidarMeasurment import lidarMeasurement
+from lidarLib.lidarMeasurement import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import time
 from lidarLib.translation import translation
