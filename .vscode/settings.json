@@ -23,6 +23,7 @@
         "setstart",
         "stopbits",
         "VARBITSCALE",
-        "wpimath"
+        "wpimath",
+        "deadband"
     ]
 }
