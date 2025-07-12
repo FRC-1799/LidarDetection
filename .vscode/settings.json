@@ -8,6 +8,8 @@
         "dsrdtr",
         "fargs",
         "geteuid",
+        "Hitbox",
+        "Hitboxes",
         "Hitboxing",
         "lidarlib",
         "lidars",

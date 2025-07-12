@@ -81,9 +81,10 @@ class Lidar:
             self.readToCapsule=None
             raise ConnectionError("could not find lidar unit")
         
-        # self.stop()
-        # self.lidarSerial.flush()
-        # time.sleep(1)
+        self.stop()
+        time.sleep(1.002)
+        self.lidarSerial.flush()
+        time.sleep(0.002)
 
         self.__getHealth()
         self.__getInfo()

@@ -26,7 +26,7 @@ from lidarLib.LidarConfigs import lidarConfigs
 
 
 def session(ntPublisher:publisher, shouldLiveSupplier:callable):
-    print("session started")
+    print("session started\n\n\n\n")
     lidar0:lidarPipeline = lidarManager.makePipedLidar(lidarConfigs.configsFromJson("lidar0.json"))
     # lidar0.connectSmart()
     
@@ -74,6 +74,7 @@ def main():
         print("while cycle")
         if (ntPublisher.isConnected()or constants.overrideNTConnectionRequirement) and not thread.is_alive():
             thread = threading.Thread(target=session, daemon=True, kwargs={"ntPublisher":ntPublisher, "shouldLiveSupplier":ntPublisher.isConnected})
+            print(ntPublisher.isConnected(), thread.is_alive())
             thread.start()
             
 

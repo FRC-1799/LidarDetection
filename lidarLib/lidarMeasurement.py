@@ -21,7 +21,7 @@ class lidarMeasurement:
             self.start_flag=True if measurement_hq.start_flag==0x1 else False
             self.quality=measurement_hq.quality
             self.angle = ((measurement_hq.angle_z_q14*90)>>8)/64.0
-            self.distance= (measurement_hq.dist_mm_q2)/4.0
+            self.distance= ((measurement_hq.dist_mm_q2)/4.0)/1000
 
     @classmethod
     def default(cls, start_flag:bool, quality:int, angle:float, distance:float, isInMM=True)->"lidarMeasurement":
