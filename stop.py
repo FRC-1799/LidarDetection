@@ -1,8 +1,17 @@
 from lidarLib.Lidar import Lidar
+import sys
 
-lidar = Lidar()
-lidar.connect(port="/dev/lidar1", baudrate=256000, timeout=3)
+from lidarLib.LidarConfigs import lidarConfigs
 
-lidar.stop()
-lidar.disconnect()
+def stop(port:str):
+    lidar = Lidar(lidarConfigs(port))
+    lidar.connect()
 
+    lidar.stop()
+    lidar.disconnect()
+
+if __name__ == '__main__':
+    if len(sys.argv)>1:
+        stop(sys.argv[1])
+    else:
+        stop("/dev/lidar0")

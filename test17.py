@@ -1,5 +1,6 @@
 
 '''Animates distances and measurment quality'''
+from lidarLib.LidarConfigs import lidarConfigs
 from lidarLib.lidarMeasurment import lidarMeasurement
 from lidarLib.Lidar import Lidar
 import matplotlib.pyplot as plot
@@ -19,15 +20,17 @@ IMAX = 20
 
 
 def run():
-    lidar = Lidar(debugMode=True, deadband=None)
-    lidar.connect(port="/dev/lidar0", baudrate=256000, timeout=3)
+    lidar = Lidar(lidarConfigs.configsFromJson("lidar0.json"))
     lidar.setMotorPwm(500)
     
-    lidar.getScanModes()
+    #lidar.getScanModes()
     print(lidar.getSampleRate())
     print(lidar.getScanModeTypical())
-    #lidar.startScanExpress(3)
-    lidar.startScan()
+    print(str(lidar.getScanModes()))
+    for item in lidar.getScanModes():
+        print(item)
+    #lidar.startScan()
+    lidar.startScanExpress(3)
     time.sleep(2)
 
     # axis = subplot.scatter([0, 1], [100, 2000], s=1, c=[IMIN, IMAX],

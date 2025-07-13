@@ -15,7 +15,7 @@ class lidarMeasurement:
             self.start_flag = bool(raw_bytes[0] & 0x1)
             self.quality = raw_bytes[0] >> 2
             self.angle = ((raw_bytes[1] >> 1) + (raw_bytes[2] << 7)) / 64.0
-            self.distance = (raw_bytes[3] + (raw_bytes[4] << 8)) / 4.0
+            self.distance = ((raw_bytes[3] + (raw_bytes[4] << 8)) / 4.0)/1000
             
         elif measurement_hq is not None:
             self.start_flag=True if measurement_hq.start_flag==0x1 else False
@@ -24,13 +24,18 @@ class lidarMeasurement:
             self.distance= (measurement_hq.dist_mm_q2)/4.0
 
     @classmethod
-    def default(cls, start_flag:bool, quality:int, angle:float, distance:float)->"lidarMeasurement":
+    def default(cls, start_flag:bool, quality:int, angle:float, distance:float, isInMM=True)->"lidarMeasurement":
         """initalizes a lidarMeasurment using the values specified. this method is only intended for debugging perpouses. For creating measurments from a lidar use the standard constructer"""
         new = cls()
         new.start_flag=start_flag
         new.quality=quality
         new.angle=angle
-        new.distance=distance
+        if (isInMM):
+            new.distance=distance/1000
+        else:
+            new.distance=distance
+
+            
         return new
                 
     def __str__(self):
