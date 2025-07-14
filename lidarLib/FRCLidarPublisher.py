@@ -71,13 +71,22 @@ class publisher:
 
     def connectionTester(self):
         while True:
-            if self.connect(teamNumber=self.teamNumber) or self.connect(port="127.0.0.1"):
-                break
+            if self.teamNumber!=0:        
+                if self.connect(teamNumber=self.teamNumber) or self.connect(port="127.0.0.1"):
+                    break
+            else:
+                if self.connect(port="127.0.0.1"):
+                    break
+
             time.sleep(4)
         print("Connected on port", self.publisher.getConnections()[0].remote_ip)
                 
 
     def getPose(self)->Pose2d:
+        # TODO
+        # if self.poseSubscriber.getLastChange()< publisher.getServerTimeOffset()-0.2 and not self.isConnectedToSim():
+        #     raise Warning("robot pose data (at position \"robotPose\"is not being consistently updated. This can cause lidar data to be inaccurate")
+        
         return self.poseSubscriber.get()
 
     def getPoseAsTran(self)->Pose2d:

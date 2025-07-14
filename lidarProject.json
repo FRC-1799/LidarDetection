@@ -1,0 +1,7 @@
+{
+    "lidarConfigs" : [
+        "/home/lidar/Documents/github/LidarDetection/lidar0.json"
+    ],
+    "teamNumber" : 1799,
+    "type" : "projectConfig"
+}

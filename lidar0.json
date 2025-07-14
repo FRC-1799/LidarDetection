@@ -10,5 +10,7 @@
     "autoStart":true,
     "debugMode" : true,
     "name" : "lidar0",
-    "mode" : "express" 
+    "mode" : "express",
+    "type" : "lidarConfig" 
+
 }
