@@ -71,7 +71,7 @@ class FRCQuickstartLidarProject:
         while True:
             if (self.publisher.isConnected()) and (not thread or not thread.is_alive()):
                 # print(self.publisher.isConnected(), thread.is_alive())
-                thread = threading.Thread(target=FRCQuickstartLidarProject.session, daemon=True, kwargs={"ntPublisher":self.publisher, "shouldLiveSupplier":self.publisher.isConnected, "configList":self.configs})
+                thread = threading.Thread(target=FRCQuickstartLidarProject.session, daemon=True, kwargs={"ntPublisher":self.publisher, "configList":self.configs})
                 thread.start()
                 
 
@@ -84,7 +84,7 @@ class FRCQuickstartLidarProject:
             time.sleep(5)
             
     @classmethod
-    def session(cls, ntPublisher:publisher, shouldLiveSupplier:callable, configList:list[lidarConfigs]):
+    def session(cls, ntPublisher:publisher, configList:list[lidarConfigs]):
         
         
         lidars = []
@@ -94,7 +94,8 @@ class FRCQuickstartLidarProject:
 
 
         
-        while shouldLiveSupplier():
+        while ntPublisher.isConnected():
+
             hitboxMap:lidarHitboxMap = lidarHitboxMap()
             pointMap=[]
             lidarTranslations = []

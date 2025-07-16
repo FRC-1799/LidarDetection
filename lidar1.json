@@ -1,0 +1,16 @@
+{
+
+    "serialNumber" : "ee588bb32e863a468fd5dc8a32645891",
+    "localTrans": {
+        "x": 0.0,
+        "y": 0.0,
+        "rotation": 0
+    },
+    "autoConnect": true,
+    "autoStart":true,
+    "debugMode" : true,
+    "name" : "lidar1",
+    "mode" : "express",
+    "type" : "lidarConfig" 
+
+}

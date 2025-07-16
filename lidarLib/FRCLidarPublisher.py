@@ -56,7 +56,7 @@ class publisher:
         
         
         if startAsServer:
-            connecter.startServer()
+            pass#connecter.startServer()
         else:
             connecter.startClient4(name)
 
@@ -133,7 +133,8 @@ class publisher:
         self.publishLidarPosesFromPose(poses)
 
     def isConnectedToSim(self)->bool:
-        return self.publisher.isConnected() and self.publisher.getConnections()[0].remoteIP == "127.0.0.1"
+        return self.publisher.isConnected() and self.publisher.getConnections()[0].remote_ip == "127.0.0.1"
+        
 
     def isConnected(self)->bool:
         return self.publisher and self.publisher.isConnected()
