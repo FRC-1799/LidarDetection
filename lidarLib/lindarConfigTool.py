@@ -31,7 +31,7 @@ class lidarConfigurationTool:
         self.findBaudRate()
 
         #get trans
-
+        self.getTrans()
 
         #deadband
 
@@ -306,95 +306,95 @@ class lidarConfigurationTool:
 
 
 
-def getTrans():
-    print(
-        "Next you will need to enter the offset of the lidar in relation to the robot.",
-        "This concept can be confusing so we have provided a (slightly scuffed) GUI.",
-        "All numbers should be in meters accept for the rotation which should be provided in degrees.", 
-        "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
-        "Once you have entered all coordinates press enter to continue"
-    )
-    input()
+    def getTrans(self):
+        print(
+            "Next you will need to enter the offset of the lidar in relation to the robot.",
+            "This concept can be confusing so we have provided a (slightly scuffed) GUI.\n",
+            "All numbers should be in meters accept for the rotation which should be provided in degrees.", 
+            "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
+            "Once you have entered all coordinates press enter to continue"
+        )
+        input()
 
 
-    x, y, r = 0,0,0
+        x, y, r = 0,0,0
 
-    pygame.init()
+        pygame.init()
+        
+
+
+        displayWidth = 500
+        displayHeight = 400
+
+        gameDisplay = pygame.display.set_mode((displayWidth,displayHeight + 100))
+
+        pygame.display.set_caption('Translation demo')
+        
+        xInputBox = InputBox(displayWidth/2 - 170, 380, 320, 32, "x(in meters)=")
+        yInputBox = InputBox(displayWidth/2 - 170, 420, 320, 32, "y(in meters)=")
+        rInputBox = InputBox(displayWidth/2 - 170, 460, 320, 32, "r(in degrees)=")
+
+        input_boxes = [xInputBox, yInputBox, rInputBox]
+
+        white = (255,255,255)
+
+        clock = pygame.time.Clock()
+        robotImg = pygame.image.load('lidarLib/robot.png')
+        lidarImg = pygame.image.load('lidarLib/lidar.png')
+        imageRect = lidarImg.get_rect(center=(displayWidth // 2, displayHeight // 2))
+
+
+
+
     
+        shouldContinue=True
+        while shouldContinue:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    shouldContinue = False
 
+                for box in input_boxes:
+                    box.handle_event(event)
+                
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                    shouldContinue=False
+                    
+            for box in input_boxes:
+                box.update()
 
-    displayWidth = 500
-    displayHeight = 400
-
-    gameDisplay = pygame.display.set_mode((displayWidth,displayHeight + 100))
-    pygame.display.set_caption('Translation demo')
-    xInputBox = InputBox(displayWidth/2 - 170, 380, 320, 32, "x(in meters)=")
-    yInputBox = InputBox(displayWidth/2 - 170, 420, 320, 32, "y(in meters)=")
-    rInputBox = InputBox(displayWidth/2 - 170, 460, 320, 32, "r(in degrees)=")
-
-    input_boxes = [xInputBox, yInputBox, rInputBox]
-
-    black = (0,0,0)
-    white = (255,255,255)
-
-    clock = pygame.time.Clock()
-    robotImg = pygame.image.load('lidarLib/robot.png')
-    lidarImg = pygame.image.load('lidarLib/lidar.png')
-    imageRect = lidarImg.get_rect(center=(displayWidth // 2, displayHeight // 2))
-
-
-
-
-  
-    shouldContinue=True
-    while shouldContinue:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                shouldContinue = False
+            x, y, r = float(xInputBox.getText()), float(yInputBox.getText()), float(rInputBox.getText())%360
+            
+            gameDisplay.fill(white)
+            gameDisplay.blit(robotImg, ((displayWidth-332)/2, (displayHeight-332)/2))
 
             for box in input_boxes:
-                box.handle_event(event)
+                box.draw(gameDisplay)
+
+            rotateLidar = pygame.transform.rotate(lidarImg, -r)
+            gameDisplay.blit(rotateLidar, (y*400+displayWidth/2-16, x*-400+(displayHeight-32)/2))
+
+            pygame.display.flip()
+            pygame.time.Clock().tick(60)
+
+        pygame.quit()
+
+
+        isGood=None
+        while not isGood:
+            print("This will set the lidar offset to x(meters) :", x, " y(meters) :", y, " rotation(degrees) :", r,".")
+            isGood = input("Does this look correct?(y/n)")
+            if isGood=='y': 
+                self.configFile.x=x
+                self.configFile.y=y
+                self.configFile.r=r
+            elif isGood=='n':
+                self.getTrans()
+                return
             
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-                shouldContinue=False
+            else:
+                print("Sorry", isGood, "is not a valid response. Try y or n.")
+
                 
-        for box in input_boxes:
-            box.update()
-
-        x, y, r = float(xInputBox.getText()), float(yInputBox.getText()), float(rInputBox.getText())%360
-        
-        gameDisplay.fill(white)
-        gameDisplay.blit(robotImg, ((displayWidth-332)/2, (displayHeight-332)/2))
-
-        for box in input_boxes:
-            box.draw(gameDisplay)
-
-        rotateLidar = pygame.transform.rotate(lidarImg, -r)
-        rotatedLidarRect = rotateLidar.get_rect(center=imageRect.center)
-        gameDisplay.blit(rotateLidar, (y*400+displayWidth/2-16, x*-400+(displayHeight-32)/2))
-
-        pygame.display.flip()
-        pygame.time.Clock().tick(60)
-    # x=None
-    # while not x:
-    #     x = input("Please input the X value of the translation to the lidar")
-    pygame.quit()
-    isGood=None
-    while not isGood:
-        print("This will set the lidar offset to x(meters) :", x, " y(meters) :", y, " rotation(degrees) :", r,".")
-        isGood = input("Does this look correct?(y/n)")
-        if isGood=='y':
-            return 
-            self.configFile.x=x
-            self.configFile.y=y
-            self.configFile.r=r
-        elif isGood=='n':
-            getTrans()
-            return
-        else:
-            print("Sorry", isGood, "is not a valid response. Try y or n. ")
-
-            
 
 
 
