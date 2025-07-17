@@ -4,6 +4,7 @@
         "blit",
         "cmap",
         "cpos",
+        "deadband",
         "DMAX",
         "dsrdtr",
         "fargs",
@@ -16,14 +17,15 @@
         "multiexit",
         "ndefualt",
         "ntcore",
+        "readall",
         "rmax",
         "RPLIDAR",
         "SAMPLERATE",
         "scalelvl",
         "setstart",
+        "Slamtec",
         "stopbits",
         "VARBITSCALE",
-        "wpimath",
-        "deadband"
+        "wpimath"
     ]
 }

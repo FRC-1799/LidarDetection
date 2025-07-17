@@ -9,7 +9,7 @@ from lidarLib.translation import translation
 
 class lidarConfigs:
 
-
+    
     defaultConfigs = {
                 
         "port" : None,
