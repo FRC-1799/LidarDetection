@@ -1,3 +1,4 @@
+import threading
 import serial
 from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
@@ -274,6 +275,7 @@ class lidarConfigurationTool:
                     pass
                 else:
                     print("Sorry", response, "is not a valid response. Try y or n. ")
+                    baudrate=None
 
 
         self.configFile.baudrate=baudrate
@@ -301,47 +303,162 @@ class lidarConfigurationTool:
         return 'Unknown'
     
 
+
+
+
 def getTrans():
-        
+    print(
+        "Next you will need to enter the offset of the lidar in relation to the robot.",
+        "This concept can be confusing so we have provided a (slightly scuffed) GUI.",
+        "All numbers should be in meters accept for the rotation which should be provided in degrees.", 
+        "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
+        "Once you have entered all coordinates press enter to continue"
+    )
+    input()
+
+
+    x, y, r = 0,0,0
+
     pygame.init()
+    
 
 
-    displayWidth = 400
+    displayWidth = 500
     displayHeight = 400
 
-    gameDisplay = pygame.display.set_mode((displayWidth,displayHeight))
+    gameDisplay = pygame.display.set_mode((displayWidth,displayHeight + 100))
     pygame.display.set_caption('Translation demo')
+    xInputBox = InputBox(displayWidth/2 - 170, 380, 320, 32, "x(in meters)=")
+    yInputBox = InputBox(displayWidth/2 - 170, 420, 320, 32, "y(in meters)=")
+    rInputBox = InputBox(displayWidth/2 - 170, 460, 320, 32, "r(in degrees)=")
+
+    input_boxes = [xInputBox, yInputBox, rInputBox]
 
     black = (0,0,0)
     white = (255,255,255)
 
     clock = pygame.time.Clock()
-    carImg = pygame.image.load('lidarLib/robot.png')
+    robotImg = pygame.image.load('lidarLib/robot.png')
     lidarImg = pygame.image.load('lidarLib/lidar.png')
+    imageRect = lidarImg.get_rect(center=(displayWidth // 2, displayHeight // 2))
 
-    x, y, r= 0, 0, 0
-    
 
-    def draw():
 
-        gameDisplay.fill(white)
-        gameDisplay.blit(carImg, ((displayWidth-332)/2, (displayHeight-332)/2))
-        gameDisplay.blit(lidarImg, (displayWidth/2 + x/400, displayHeight/2 + y/400, r))
-        pygame.display.update()
 
-    draw()
-        
   
+    shouldContinue=True
+    while shouldContinue:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                shouldContinue = False
 
-    while True:
-        pass
+            for box in input_boxes:
+                box.handle_event(event)
+            
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                shouldContinue=False
+                
+        for box in input_boxes:
+            box.update()
+
+        x, y, r = float(xInputBox.getText()), float(yInputBox.getText()), float(rInputBox.getText())%360
+        
+        gameDisplay.fill(white)
+        gameDisplay.blit(robotImg, ((displayWidth-332)/2, (displayHeight-332)/2))
+
+        for box in input_boxes:
+            box.draw(gameDisplay)
+
+        rotateLidar = pygame.transform.rotate(lidarImg, -r)
+        rotatedLidarRect = rotateLidar.get_rect(center=imageRect.center)
+        gameDisplay.blit(rotateLidar, (y*400+displayWidth/2-16, x*-400+(displayHeight-32)/2))
+
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
     # x=None
     # while not x:
     #     x = input("Please input the X value of the translation to the lidar")
-
-
     pygame.quit()
+    isGood=None
+    while not isGood:
+        print("This will set the lidar offset to x(meters) :", x, " y(meters) :", y, " rotation(degrees) :", r,".")
+        isGood = input("Does this look correct?(y/n)")
+        if isGood=='y':
+            return 
+            self.configFile.x=x
+            self.configFile.y=y
+            self.configFile.r=r
+        elif isGood=='n':
+            getTrans()
+            return
+        else:
+            print("Sorry", isGood, "is not a valid response. Try y or n. ")
 
+            
+
+
+
+class InputBox:
+
+
+    def __init__(self, x, y, w, h, text=''):
+        pygame.font.init() #
+
+        self.font = pygame.font.SysFont(None, 22)
+        self.colorActive = pygame.Color('dodgerblue2')
+        self.colorInactive = pygame.Color('lightskyblue3')
+
+
+
+        self.rect = pygame.Rect(x, y, w, h)
+        self.color = self.colorInactive
+        self.displayText = text
+        self.text=''
+        self.txt_surface = self.font.render(text, True, self.color)
+        self.active = False
+
+
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # If the user clicked on the input_box rect.
+            if self.rect.collidepoint(event.pos):
+                # Toggle the active variable.
+                self.active = not self.active
+            else:
+                self.active = False
+            # Change the current color of the input box.
+            self.color = self.colorActive if self.active else self.colorInactive
+        if event.type == pygame.KEYDOWN:
+            if self.active:
+                if event.key == pygame.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                else:
+                    if event.unicode.isdigit() or event.unicode=='.' or (event.unicode=='-' and len(self.text)==0):
+                        self.text += event.unicode
+                # Re-render the text.
+                self.txt_surface = self.font.render(self.displayText + self.text, True, self.color)
+
+    def update(self):
+        # Resize the box if the text is too long.
+        width = max(200, self.txt_surface.get_width()+10)
+        self.rect.w = width
+
+    def draw(self, screen):
+        # Blit the text.
+        screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
+        # Blit the rect.
+        pygame.draw.rect(screen, self.color, self.rect, 2)
+
+    def getText(self):
+        if self.text=='' or self.text=='-':
+            return 0
+        
+        # if self.text[-1]=='.':
+        #     return self.text[:len(self.text)-1]
+        
+        
+        return self.text
 
 
 
