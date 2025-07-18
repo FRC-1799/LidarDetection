@@ -1,3 +1,3 @@
-from lidarLib.lindarConfigTool import getTrans
+from lidarLib.lidarConfigTool import lidarConfigurationTool
 
-getTrans()
+lidarConfigurationTool()

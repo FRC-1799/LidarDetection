@@ -1,4 +1,6 @@
+from math import acos, asin, cos, pi, sin
 import threading
+from numpy import arccos, arcsin
 import serial
 from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
@@ -14,26 +16,30 @@ def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = Tru
 class lidarConfigurationTool:
 
     def __init__(self):
-        self.defaults = lidarConfigs.defaultConfigs
-        self.configFile:lidarConfigs=None
+        # self.defaults = lidarConfigs.defaultConfigs
+        # self.configFile:lidarConfigs=None
 
-        #opening
-        self.opening()
+        # #opening
+        # self.opening()
         
 
-        self.verboseCheck()
+        # self.verboseCheck()
 
-        #find lidar
-        self.findLidar()
+        # #find lidar
+        # self.findLidar()
 
 
-        #baudrate
-        self.findBaudRate()
+        # #baudrate
+        # self.findBaudRate()
 
         #get trans
-        self.getTrans()
+        #self.getTransOrDeadband(True)
+        
 
         #deadband
+        self.configFile = lidarConfigs(port="lol")
+        self.configFile.x, self.configFile.y, self.configFile.r = 0, 0, 180
+        self.getTransOrDeadband(False)
 
         #verbose checks
 
@@ -306,18 +312,19 @@ class lidarConfigurationTool:
 
 
 
-    def getTrans(self):
-        print(
-            "Next you will need to enter the offset of the lidar in relation to the robot.",
-            "This concept can be confusing so we have provided a (slightly scuffed) GUI.\n",
-            "All numbers should be in meters accept for the rotation which should be provided in degrees.", 
-            "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
-            "Once you have entered all coordinates press enter to continue"
-        )
+    def getTransOrDeadband(self, isTrans:bool):
+        if isTrans:
+            print(
+                "Next you will need to enter the offset of the lidar in relation to the robot.",
+                "This concept can be confusing so we have provided a (slightly scuffed) GUI.\n",
+                "All numbers should be in meters accept for the rotation which should be provided in degrees.", 
+                "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
+                "Once you have entered all coordinates press enter to continue"
+            )
         input()
 
 
-        x, y, r = 0,0,0
+        x, y, r, deadbandStart, deadbandEnd = 0,0,0,0,0
 
         pygame.init()
         
@@ -333,8 +340,12 @@ class lidarConfigurationTool:
         xInputBox = InputBox(displayWidth/2 - 170, 380, 320, 32, "x(in meters)=")
         yInputBox = InputBox(displayWidth/2 - 170, 420, 320, 32, "y(in meters)=")
         rInputBox = InputBox(displayWidth/2 - 170, 460, 320, 32, "r(in degrees)=")
+        deadbandStartBox  = InputBox(displayWidth/2 - 170, 420, 320, 32, "Start of the deadband=")
+        deadbandEndBox = InputBox(displayWidth/2 - 170, 460, 320, 32, "End of the deadband=")
 
-        input_boxes = [xInputBox, yInputBox, rInputBox]
+        transInputBoxes = [xInputBox, yInputBox, rInputBox]
+        deadInputBoxes = [deadbandStartBox, deadbandEndBox]
+
 
         white = (255,255,255)
 
@@ -353,48 +364,85 @@ class lidarConfigurationTool:
                 if event.type == pygame.QUIT:
                     shouldContinue = False
 
-                for box in input_boxes:
-                    box.handle_event(event)
-                
+                if isTrans:
+                    for box in transInputBoxes:
+                        box.handleEvent(event)
+                else:
+                    for box in deadInputBoxes:
+                        box.handleEvent(event)
+
+
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                     shouldContinue=False
                     
-            for box in input_boxes:
+            for box in transInputBoxes:
                 box.update()
+            if isTrans:
+                x, y, r = float(xInputBox.getText()), float(yInputBox.getText()), float(rInputBox.getText())%360
+            else:
+                deadbandStart, deadbandEnd = float(deadbandStartBox.getText())%360, float(deadbandEndBox.getText())%360
+                x, y, r = self.configFile.x, self.configFile.y, self.configFile.r
 
-            x, y, r = float(xInputBox.getText()), float(yInputBox.getText()), float(rInputBox.getText())%360
-            
             gameDisplay.fill(white)
             gameDisplay.blit(robotImg, ((displayWidth-332)/2, (displayHeight-332)/2))
+            lidarRenderX, lidarRenderY =y*400+displayWidth/2, x*-400+displayHeight/2
 
-            for box in input_boxes:
-                box.draw(gameDisplay)
+            if isTrans:
+                for box in transInputBoxes:
+                    box.draw(gameDisplay)
+            else:
+                for box in deadInputBoxes:
+                    box.draw(gameDisplay)
+                
+                if deadbandStartBox.text!='' and deadbandEndBox.text!='':
+                    alphaDisplay = pygame.Surface((displayWidth, displayHeight), pygame.SRCALPHA)
+                    if deadbandEnd>deadbandStart:
+                        pygame.draw.polygon(alphaDisplay, [128, 128, 128, 128], (
+                                (lidarRenderX, lidarRenderY),
+                                (lidarRenderX+400000*cos((deadbandStart-90)*pi/180),lidarRenderY+400000*sin((deadbandStart-90)*pi/180)),
+                                (lidarRenderX+400000*cos(((deadbandStart+deadbandEnd)/2-90)*pi/180),lidarRenderY+400000*sin(((deadbandStart+deadbandEnd)/2-90)*pi/180)),
+                                (lidarRenderX+400000*cos((deadbandEnd-90)*pi/180),lidarRenderY+400000*sin((deadbandEnd-90)*pi/180))
+                        ))
+                        # print(
+                        #     (lidarRenderX+4000*cos((deadbandStart-90)*pi/180),   lidarRenderY+4000*sin((deadbandStart-90)*pi/180)),
+                        #     (lidarRenderX+4000*cos(((deadbandStart+deadbandEnd)/2-90)*pi/180),  lidarRenderY+4000*sin(((deadbandStart+deadbandEnd)/2-90)*pi/180)),
+                        #     (lidarRenderX+4000*cos((deadbandEnd-90)*pi/180),  lidarRenderY+4000*sin((deadbandEnd-90)*pi/180))
+                        # )
+                        # print(deadbandStart, deadbandEnd)
+                    else:
+                        pygame.draw.polygon(alphaDisplay, [128, 128, 128, 128], (
+                                (lidarRenderX, lidarRenderY),
+                                (lidarRenderX+400000*cos((deadbandEnd-90)*pi/180),lidarRenderY+400000*sin((deadbandEnd-90)*pi/180)),
+                                (lidarRenderX+400000*cos(((deadbandStart+deadbandEnd)/2+90)*pi/180),lidarRenderY+400000*sin(((deadbandStart+deadbandEnd)/2+90)*pi/180)),
+                                (lidarRenderX+400000*cos((deadbandStart-90)*pi/180),lidarRenderY+400000*sin((deadbandStart-90)*pi/180))
+                        ))
+                    gameDisplay.blit(alphaDisplay, (0,0))
+
 
             rotateLidar = pygame.transform.rotate(lidarImg, -r)
-            gameDisplay.blit(rotateLidar, (y*400+displayWidth/2-16, x*-400+(displayHeight-32)/2))
+            gameDisplay.blit(rotateLidar, (lidarRenderX-16, lidarRenderY-16))
 
             pygame.display.flip()
             pygame.time.Clock().tick(60)
 
         pygame.quit()
 
-
-        isGood=None
-        while not isGood:
-            print("This will set the lidar offset to x(meters) :", x, " y(meters) :", y, " rotation(degrees) :", r,".")
-            isGood = input("Does this look correct?(y/n)")
-            if isGood=='y': 
-                self.configFile.x=x
-                self.configFile.y=y
-                self.configFile.r=r
-            elif isGood=='n':
-                self.getTrans()
-                return
-            
-            else:
-                print("Sorry", isGood, "is not a valid response. Try y or n.")
-
+        if isTrans:
+            isGood=None
+            while not isGood:
+                print("This will set the lidar offset to x(meters) :", x, " y(meters) :", y, " rotation(degrees) :", r,".")
+                isGood = input("Does this look correct?(y/n)")
+                if isGood=='y': 
+                    self.configFile.x=x
+                    self.configFile.y=y
+                    self.configFile.r=r
+                elif isGood=='n':
+                    self.getTrans()
+                    return
                 
+                else:
+                    print("Sorry", isGood, "is not a valid response. Try y or n.")
+
 
 
 
@@ -419,7 +467,7 @@ class InputBox:
 
 
 
-    def handle_event(self, event):
+    def handleEvent(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             # If the user clicked on the input_box rect.
             if self.rect.collidepoint(event.pos):
@@ -451,7 +499,7 @@ class InputBox:
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
     def getText(self):
-        if self.text=='' or self.text=='-':
+        if self.text=='' or self.text=='-' or self.text=='.':
             return 0
         
         # if self.text[-1]=='.':
