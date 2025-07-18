@@ -10,27 +10,47 @@ from lidarLib.translation import translation
 class lidarConfigs:
 
 
-    defaultLocalTrans = translation.default()
-    defaultBaudrate = 256000
-    defaultTimeout=3 
-    deadband=None
-    debugMode=False
-    defaultIsStop=False
-    defaultAutoStart=False
-    defaultAutoConnect=True
-    defaultDefaultSpeed=lidarProtocol.RPLIDAR_DEFAULT_MOTOR_PWM
-    defaultDeadband=None
-    defaultDebugMode = False
-    defaultReportData=True
-    defaultReportSampleRate=True
-    defaultReportScanModes=True
-    defaultReportCombinedOffset=True
-    defaultMode="normal"
+    defaultConfigs = {
+                
+        "port" : None,
+        "localTrans": translation.default(),
+        "baudrate" : 256000,
+        "deadband" : None,
+        "timeout" : 3,
+        "mode"  : "normal",
+        "debugMode" : False,
+        "isStop" : False,
+        "autoStart" : False,
+        "autoConnect" : True,
+        "defaultSpeed" : lidarProtocol.RPLIDAR_DEFAULT_MOTOR_PWM,
+        "reportData" : True,
+        "reportSampleRate" : True,
+        "reportCombinedOffset" : True,
+        "reportScanModes" : True
+    }
 
 
-    def __init__(self, port:str, localTrans = defaultLocalTrans, baudrate = defaultBaudrate, timeout=defaultTimeout, mode=defaultMode, deadband=defaultDeadband, debugMode=defaultDebugMode,
-                isStop=defaultIsStop, autoStart=defaultAutoStart, autoConnect=defaultAutoConnect, defaultSpeed=defaultDefaultSpeed,
-                reportData=defaultReportData, reportSampleRate=defaultReportSampleRate, reportScanModes=defaultReportScanModes, reportCombinedOffset=defaultReportCombinedOffset):
+
+
+    def __init__(
+                    self, 
+                    port:string,
+                    localTrans = defaultConfigs['localTrans'], 
+                    baudrate = defaultConfigs["baudrate"], 
+                    timeout=defaultConfigs["timeout"], 
+                    mode=defaultConfigs["mode"], 
+                    deadband=defaultConfigs["deadband"], 
+                    debugMode=defaultConfigs["debugMode"],
+                    isStop=defaultConfigs["isStop"], 
+                    autoStart=defaultConfigs["autoStart"], 
+                    autoConnect=defaultConfigs["autoStart"], 
+                    defaultSpeed=defaultConfigs["defaultSpeed"],
+                    reportData=defaultConfigs["reportData"], 
+                    reportSampleRate=defaultConfigs["reportSampleRate"], 
+                    reportScanModes=defaultConfigs["reportScanModes"], 
+                    reportCombinedOffset=defaultConfigs["reportScanModes"]
+            ):
+
         self.port=port
         self.localTrans = localTrans
         self.baudrate = baudrate
@@ -79,32 +99,32 @@ class lidarConfigs:
                 return cls(
                     port = data.get("port"), 
                     localTrans = translation.fromCart(
-                        data.get("localTrans").get("x", lidarConfigs.defaultLocalTrans.x),
-                        data.get("localTrans").get("y", lidarConfigs.defaultLocalTrans.y),
-                        data.get("localTrans").get("rotation", lidarConfigs.defaultLocalTrans.rotation)
+                        data.get("localTrans").get("x", lidarConfigs.defaultConfigs["localTrans"].x),
+                        data.get("localTrans").get("y", lidarConfigs.defaultConfigs["localTrans"].y),
+                        data.get("localTrans").get("rotation", lidarConfigs.defaultConfigs["localTrans"].rotation)
                     ),
-                    baudrate = data.get("baudrate", lidarConfigs.defaultBaudrate),
-                    deadband = data.get("deadband", lidarConfigs.defaultTimeout),
-                    timeout = data.get("timeout", lidarConfigs.defaultDeadband),
-                    mode  = data.get("mode", lidarConfigs.defaultMode),
-                    debugMode = data.get("debugMode", lidarConfigs.defaultDebugMode),
-                    isStop = data.get("isStop", lidarConfigs.defaultIsStop),
-                    autoStart = data.get("autoStart", lidarConfigs.defaultAutoStart),
-                    autoConnect = data.get("autoConnect", lidarConfigs.defaultAutoConnect),
-                    defaultSpeed = data.get("defaultSpeed", lidarConfigs.defaultDefaultSpeed),
-                    reportData = data.get("reportData", lidarConfigs.defaultReportData),
-                    reportSampleRate = data.get("reportSampleRate", lidarConfigs.defaultReportSampleRate),
-                    reportScanModes = data.get("reportScanModes", lidarConfigs.defaultReportScanModes),
-                    reportCombinedOffset = data.get("reportCombinedOffset", lidarConfigs.defaultReportCombinedOffset)
+                    baudrate = data.get("baudrate", lidarConfigs.defaultConfigs["baudrate"]),
+                    deadband = data.get("deadband", lidarConfigs.defaultConfigs["deadband"]),
+                    timeout = data.get("timeout", lidarConfigs.defaultConfigs["timeout"]),
+                    mode  = data.get("mode", lidarConfigs.defaultConfigs["mode"]),
+                    debugMode = data.get("debugMode", lidarConfigs.defaultConfigs["debugMode"]),
+                    isStop = data.get("isStop", lidarConfigs.defaultConfigs["isStop"]),
+                    autoStart = data.get("autoStart", lidarConfigs.defaultConfigs["autoStart"]),
+                    autoConnect = data.get("autoConnect", lidarConfigs.defaultConfigs["autoConnect"]),
+                    defaultSpeed = data.get("defaultSpeed", lidarConfigs.defaultConfigs["defaultSpeed"]),
+                    reportData = data.get("reportData", lidarConfigs.defaultConfigs["reportData"]),
+                    reportSampleRate = data.get("reportSampleRate", lidarConfigs.defaultConfigs["reportSampleRate"]),
+                    reportScanModes = data.get("reportScanModes", lidarConfigs.defaultConfigs["reportScanModes"]),
+                    reportCombinedOffset = data.get("reportCombinedOffset", lidarConfigs.defaultConfigs["reportCombinedOffset"])
                 )
             
 
 
         except FileNotFoundError:
-            print(f"Error: File not found at path: {path}")
+            print(f"Error: File not found at path: [path]")
             return None
         except json.JSONDecodeError:
-            print(f"Error: Invalid JSON format in file: {path}")
+            print(f"Error: Invalid JSON format in file: [path]")
             return None
 
     def writeToJson(self, path:string):
@@ -132,12 +152,21 @@ class lidarConfigs:
                 "reportCombinedOffset" : self.reportCombinedOffset
             }
 
+            keysToRemove = []
+            for key in data.keys():
+                if data[key] == lidarConfigs.defaultConfigs[key]:
+                    keysToRemove.append(key)
+
+            for key in keysToRemove:
+                data.pop(key)
+            
+
             with open(path, 'w') as file:
-                json.dump(data, file)                
+                json.dump(data, file, indent=4)                
 
 
         except FileNotFoundError:
-            print(f"Error: File not found at path: {path}")
+            print(f"Error: File not found at path: [path]")
             return None
 
 

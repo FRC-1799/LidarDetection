@@ -96,7 +96,8 @@ class Lidar:
         if self.config.autoStart:
             if self.config.mode=="normal":
                 self.startScan()
-                print("start attempted")
+            if self.config.mode == "express":
+                self.startScanExpress()
         
 
     def isRunning(self):
@@ -469,7 +470,14 @@ class Lidar:
     
 
     #@DeprecationWarning
-    def startScanExpress(self, mode:int):
+    def startScanExpress(self, mode:int = "auto"):
+
+        if mode == "auto":
+            mode = self.getScanModeTypical()
+
+        if not isinstance(mode, int) or mode not in range(0,5):
+            raise ValueError("mode value must be \"auto\" or an integer in range 0-4 instead of the given", mode)
+
         self.setMotorPwm(overrideInternalValue=False)
         self.__sendCommand(RPLIDAR_CMD_EXPRESS_SCAN, struct.pack("<BI", mode, 0x00000000))
         sleep(0.001)
