@@ -1,4 +1,3 @@
-import string
 import json
 
 
@@ -73,7 +72,7 @@ class lidarConfigs:
             self.printConfigs()
             
     def printConfigs(self):
-        print("new lidarConfig created with args", 
+        print("lidarConfig args", 
             "\nport:", self.port,
             "\nlocalTrans:", self.localTrans,
             "\nbaudrate:", self.baudrate,
