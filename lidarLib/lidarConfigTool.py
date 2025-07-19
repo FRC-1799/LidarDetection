@@ -1,9 +1,12 @@
 from math import acos, asin, cos, pi, sin
+import os
 import threading
 from numpy import arccos, arcsin
 import serial
+
 from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 
 
@@ -18,6 +21,8 @@ class lidarConfigurationTool:
     def __init__(self):
         # self.defaults = lidarConfigs.defaultConfigs
         # self.configFile:lidarConfigs=None
+        self.configFile = lidarConfigs(port="lol")
+
 
         # #opening
         # self.opening()
@@ -33,12 +38,12 @@ class lidarConfigurationTool:
         # self.findBaudRate()
 
         #get trans
-        #self.getTransOrDeadband(True)
+        self.getTransOrDeadband(True)
         
 
         #deadband
-        self.configFile = lidarConfigs(port="lol")
-        self.configFile.x, self.configFile.y, self.configFile.r = 0, 0, 180
+        # self.configFile = lidarConfigs(port="lol")
+        # self.configFile.x, self.configFile.y, self.configFile.r = 0, 0, 180
         self.getTransOrDeadband(False)
 
         #verbose checks
@@ -319,7 +324,18 @@ class lidarConfigurationTool:
                 "This concept can be confusing so we have provided a (slightly scuffed) GUI.\n",
                 "All numbers should be in meters accept for the rotation which should be provided in degrees.", 
                 "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
+                "if you do not wish to use this feature simply do not provide any values",
                 "Once you have entered all coordinates press enter to continue"
+            )
+        else:
+            print(
+                "Next you will need to enter the deadband of the lidar in relation to the robot.",
+                "This is a range of degree values that will be thrown out by the lidar. This is useful to block out areas occupied by your robot."
+                "This concept can be confusing so we have provided another (slightly scuffed) GUI. The grayed out angles are the ones that will be discarded\n",
+                "All numbers should be in degrees.", 
+                "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
+                "if you do not wish to use this feature simply do not provide any values",
+                "Once you have entered the correct deadband press enter to continue"
             )
         input()
 
@@ -360,6 +376,8 @@ class lidarConfigurationTool:
     
         shouldContinue=True
         while shouldContinue:
+
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     shouldContinue = False
@@ -437,11 +455,29 @@ class lidarConfigurationTool:
                     self.configFile.y=y
                     self.configFile.r=r
                 elif isGood=='n':
-                    self.getTrans()
+                    self.getTransOrDeadband(True)
                     return
                 
                 else:
                     print("Sorry", isGood, "is not a valid response. Try y or n.")
+
+        
+        else:
+            isGood=None
+            while not isGood:
+                print("This will set the lidar deadband to the range from", deadbandStart,"to", deadbandEnd, ".")
+                isGood = input("Does this look correct?(y/n)")
+                if isGood=='y': 
+                    self.configFile.deadband = (deadbandStart, deadbandEnd)
+
+                elif isGood=='n':
+                    self.getTransOrDeadband(False)
+                    return
+                
+                else:
+                    print("Sorry", isGood, "is not a valid response. Try y or n.")
+
+
 
 
 
