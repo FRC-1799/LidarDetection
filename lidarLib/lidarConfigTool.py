@@ -396,9 +396,9 @@ class lidarConfigurationTool:
             for box in transInputBoxes:
                 box.update()
             if isTrans:
-                x, y, r = float(xInputBox.getText()), float(yInputBox.getText()), float(rInputBox.getText())%360
+                x, y, r = xInputBox.getText(), yInputBox.getText(), rInputBox.getText()%360
             else:
-                deadbandStart, deadbandEnd = float(deadbandStartBox.getText())%360, float(deadbandEndBox.getText())%360
+                deadbandStart, deadbandEnd = deadbandStartBox.getText()%360, deadbandEndBox.getText()%360
                 x, y, r = self.configFile.x, self.configFile.y, self.configFile.r
 
             gameDisplay.fill(white)
@@ -491,8 +491,9 @@ class InputBox:
         self.font = pygame.font.SysFont(None, 22)
         self.colorActive = pygame.Color('dodgerblue2')
         self.colorInactive = pygame.Color('lightskyblue3')
+        self.invalid = pygame.Color(200, 0, 0)
 
-
+        self.hasValidText=False
 
         self.rect = pygame.Rect(x, y, w, h)
         self.color = self.colorInactive
@@ -532,17 +533,19 @@ class InputBox:
         # Blit the text.
         screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
-        pygame.draw.rect(screen, self.color, self.rect, 2)
+        pygame.draw.rect(screen, self.color if self.hasValidText else self.invalid, self.rect, 2)
 
     def getText(self):
-        if self.text=='' or self.text=='-' or self.text=='.':
+        try:
+            self.hasValidText=True
+            return float(self.text)
+        
+        except:
+            
+            self.hasValidText=self.text==''
             return 0
         
-        # if self.text[-1]=='.':
-        #     return self.text[:len(self.text)-1]
-        
-        
-        return self.text
+
 
 
 
