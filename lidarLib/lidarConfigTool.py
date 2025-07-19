@@ -81,6 +81,7 @@ class lidarConfigurationTool:
             self.getAutoConnectAndStart()
             
             #debug 
+            self.getDebug()
 
         #path
 
@@ -491,7 +492,7 @@ class lidarConfigurationTool:
                 "This setting is defaulted to true."
         )
     
-    def getDebut(self):
+    def getDebug(self):
         self.configFile.debugMode=standardQuestion(
             "Would you like to create the lidar in debug mode (recommended no)?",
             helpStr=
