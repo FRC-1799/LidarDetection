@@ -18,6 +18,27 @@ def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = Tru
     if shouldLower: response=response.lower()
     return response
 
+def standardQuestion(question:str, yesStr:str = None, noStr:str = None, helpStr:str = None, invalidStr:str = None, addAnswerString:bool=True)->bool:
+    response = getInput(question+(" (y/n" + ("/help)" if helpStr else")")) if addAnswerString else "")
+
+    while True:
+        response = getInput(question)
+
+        if response=='y':
+            if yesStr: print(yesStr) 
+            return True
+        elif response == 'n':
+            if noStr: print(noStr)
+            return False
+        elif response == 'help':
+            if helpStr: print(helpStr)
+            else: print("Sorry help is not currently available on this question")
+        else:
+            
+            print("Sorry ", response, " is not a valid response. Try y, n", (", or help. " if helpStr else "."), sep="")
+
+
+
 
 
 
@@ -74,44 +95,19 @@ class lidarConfigurationTool:
         #quickstart tool??????
 
     def opening(self):
-        
-        response = getInput("Welcome the Wired lib lidar Config tool. If at any time you are confused type \"help\" and more information will be provided. Make sense? (y/n)")
-        
-        if response=='help':
-            print("throughout the tool the character \'y\' will be used for yes and the character \'n\' will be used for no. If these responses are not working make sure your typing in lower case and then restart the tool.")
+        standardQuestion(
+            "Welcome the Wired lib lidar Config tool. If at any time you are confused type \"help\" and more information will be provided. Make sense?",
+            None,
+            "Try typing \"help\" for help"
+            "throughout the tool the character \'y\' will be used for yes and the character \'n\' will be used for no. If these responses are not working make sure your typing the right character and then restart the tool."
+        )
 
-        elif response=="y":
-            return
-        
-        elif response=="n":
-            print("Try typing \"help\" for help")
-            self.opening()
-            return
-
-        else:
-            print("Sorry", response, "is not a valid response. Try y, n, or help. ")
-            self.opening()
-            return
 
     def verboseCheck(self):
-        response = getInput("Would you like to run in verbose mode (only recommended for people with significant experience). (y/n)")
-        
-        if response=="help":
-            print("Verbose mode provides the option to edit more volatile configs that may cause crashes if used wrong and should be defaulted most of the time.")
-            self.verboseCheck()
-            return
-
-        elif response=='y':
-            self.verbose=True
-            
-
-        elif response=='n':
-            self.verbose=False
-
-        else:
-            print("Sorry", response, "is not a valid response. Try y, n, or help. ")
-            self.verboseCheck()
-            return
+        self.verbose = standardQuestion(
+            "Would you like to run in verbose mode (only recommended for people with significant experience)?",
+            helpStr="Verbose mode provides the option to edit more volatile configs that may cause crashes if used wrong and should be defaulted most of the time."
+        )
 
     def findLidar(self):
         trash = getInput("Please plug in EXACTLY 1 Slamtec lidar to be configured. Press enter to continue")
@@ -126,22 +122,25 @@ class lidarConfigurationTool:
                     self.portFound==bus.product
                 else:
                     print("Detected multiple lidar like devices. Please make sure that there is only one lidar plugged in. If the issue continues please try on a different device.")
-                    response = getInput("Would you like to enter the productID, vendorID, and serial number manually? (y/n)")
-                    if response=='help':
-                        print("It is possible for the config tool to mistake other devices for lidars. If this it the case you may choose to manually the values here.")
-                    elif response == 'y':
+                    
+                    if standardQuestion(
+                        "Would you like to enter the productID, vendorID, and serial number manually?", 
+                        helpStr="It is possible for the config tool to mistake other devices for lidars. If this it the case you may choose to manually the values here."
+                        ):
                         self.enterSerialValuesManual()
-                        break
-
+                        return
+ 
                     self.configFile=None
                     self.findLidar()
                     return
                 
         if self.verbose:
             print("Lidar found with vendorID:", self.configFile.vendorID, " productID:", self.configFile.productID, "serialPort:", self.configFile.serialNumber,)
-            response = getInput("Does this look right?(y/n)")
-            if response=='n':
+            if not standardQuestion("Does this look right?"):
                 self.enterSerialValuesManual()
+                if not self.configFile:
+                    self.findLidar()
+                    return
 
         else:
             print("Lidar Found!!!")
@@ -151,22 +150,13 @@ class lidarConfigurationTool:
 
     def enterSerialValuesManual(self):
         shouldQuit = getInput("Would you like to continue setting the productID, vendorID, and serial number of the lidar manually (y/n)")
-        if shouldQuit=="help":
-            print(
-                "This function allows you to manually set the vendorID, productID, and serial number of the lidar." 
-                " This can be useful if the Config tool is having trouble finding the lidar."
-            )
-
-        elif( shouldQuit=='y'):
-            return
+        if not standardQuestion(
+                "Would you like to continue setting the productID, vendorID, and serial number of the lidar manually?",
+                helpStr=
+                    "This function allows you to manually set the vendorID, productID, and serial number of the lidar."+
+                    " This can be useful if the Config tool is having trouble finding the lidar."
+        ):return
         
-        elif(shouldQuit=='n'):
-            pass
-
-        else:
-            print("Sorry", shouldQuit, "is not a valid response. Try y, n, or help. ")
-            self.enterSerialValuesManual()
-            return
 
         vid = None
         while vid:
@@ -182,15 +172,16 @@ class lidarConfigurationTool:
                 print("Vendor ID", vid, "Could not be converted into a hexadecimal integer. Likely it was formatted incorrectly")
                 self.enterSerialValuesManual()
                 vid=None
+                continue
             
             if vid<0 or vid>0xffff:
                 print("Vendor ID", vid, "Was not in valid range 0x0000 to 0xffff")
                 vid=None
+                continue
 
-            isCorrect = getInput("VendorID will be set to", vid, ". Does this look correct?(y/n)")
-            if isCorrect!='y':
+
+            if not standardQuestion("VendorID will be set to " + vid + ". Does this look correct?"):
                 vid=None
-            
 
 
         pid = None
@@ -204,14 +195,15 @@ class lidarConfigurationTool:
                 print("Product ID", pid, "Could not be converted into a hexadecimal integer. Likely it was formatted incorrectly")
                 self.enterSerialValuesManual()
                 pid=None
+                continue
             
             if pid<0 or pid>0xffff:
                 print("Product ID", pid, "Was not in valid range 0x0000 to 0xffff")
                 pid=None
+                continue
 
-            isCorrect = getInput("Product ID will be set to", pid, ". Does this look correct?(y/n)")
-            if isCorrect!='y':
-                pid=None
+            if not standardQuestion("ProductID will be set to " + pid + ". Does this look correct?"):
+                vid=None
 
 
 
@@ -224,77 +216,65 @@ class lidarConfigurationTool:
                 serialNumber=None
 
 
-        response=None
-        while not response:
-            response = getInput("This will set the Vendor ID to", vid, ", the product id to", pid,", and the serial number to", serialNumber, ". Does this look correct?(y/n)")
-            if response=='y':
-                break
-            elif response == 'n':
-                isSure = None
-                while not isSure:
-                    isSure=getInput("Are you sure? saying yes will restart the manual process from the beginning. (y/n)")
-                    if isSure=='y':
-                        self.enterSerialValuesManual()
-                        return
-                    elif isSure=='n':
-                        break
-                    else:
-                        print("Sorry", isSure, "is not a valid response. Try y or n. ")
+        
+        if not standardQuestion(
+            "This will set the Vendor ID to" + vid +
+            ", the product id to" + pid +
+            ", and the serial number to" + serialNumber +
+            ". Does this look correct?"):
+            if standardQuestion("Are you sure? saying yes will restart the manual process from the beginning."):
+                self.enterSerialValuesManual()
+                return
+
+           
 
 
-            else:
-                print("Sorry", response, "is not a valid response. Try y or n. ")
-                response=None
-
-
-        print("Values set!!!")
         self.configFile = lidarConfigs(vendorID=vid, productID=pid, serialNumber=serialNumber)
+        print("Values set!!!")
+
 
 
     def findBaudRate(self):
         baudrate = self.baudRateAutoTest()
         if baudrate=="Unknown":
-            response = getInput(
-                "The config tool could not automatically determine the baudrate of connected lidar. " 
-                "Would you like to manually enter the baudrate (otherwise the system will try again)? (y/n)"
-            )
-
-            if response=='y':
-                pass 
-
-            elif response=="help":
-                print(
-                    "Baudrate tells the system how fast the lidar will send packages. " 
-                    "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it. " 
-                    "Otherwise check the specific models documentation to find the baudrate. ")
-                self.findBaudRate()
-                return
-            elif response=='n':
-                self.findBaudRate()
-                return
+            if not standardQuestion(
             
-            else:
-                self.findBaudRate()
-                print("Sorry", response, "is not a valid response. Try y or n. ")
-                return
+                question=
+                    "The config tool could not automatically determine the baudrate of connected lidar. " +
+                    "Would you like to manually enter the baudrate (otherwise the system will try again)?",
+                helpStr= 
+                    "Baudrate tells the system how fast the lidar will send packages. " +
+                    "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it. " +
+                    "Otherwise check the specific models documentation to find the baudrate. "
+            ): self.findBaudRate()
+            
             
             baudrate=None
             while not baudrate:
-                baudrate = getInput("Please enter the baudrate as a decimal integer.").strip()
-                try:
-                    baudrate = int(baudrate)
-                except:
-                    print("Could not convert", baudrate, "to a decimal integer. Please try again")
-                    baudrate=0
-                
-                response= getInput("This will set the baudrate to", baudrate, ". Does this look correct?")
-                if response=='y':
-                    break
-                elif response == 'n':
-                    pass
-                else:
-                    print("Sorry", response, "is not a valid response. Try y or n. ")
+                baudrate = getInput("Please enter the baudrate as a decimal integer or enter \"help\" for help.")
+                if baudrate == "help":
+                    print(
+                        "Baudrate tells the system how fast the lidar will send packages.", 
+                        "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it.",
+                        "Otherwise check the specific models documentation to find the baudrate."
+                    )
                     baudrate=None
+                else:
+                    try:
+                        baudrate = int(baudrate)
+                    except:
+                        print("Could not convert", baudrate, "to a decimal integer. Please try again")
+                        baudrate=None
+                
+                if not standardQuestion(
+                    "This will set the baudrate to " + baudrate + ". Does this look correct?",
+                    helpStr= 
+                        "Baudrate tells the system how fast the lidar will send packages. " +
+                        "If your lidar model has a 5pin to usb adapter it may have a switch on the side to change Baudrate with the numbers written on it. " +
+                        "Otherwise check the specific models documentation to find the baudrate. "
+                    ):baudrate = None
+
+
 
 
         self.configFile.baudrate=baudrate
@@ -454,36 +434,25 @@ class lidarConfigurationTool:
         pygame.quit()
 
         if isTrans:
-            isGood=None
-            while not isGood:
-                print("This will set the lidar offset to x(meters) :", x, " y(meters) :", y, " rotation(degrees) :", r,".")
-                isGood = input("Does this look correct?(y/n)")
-                if isGood=='y': 
-                    self.configFile.x=x
-                    self.configFile.y=y
-                    self.configFile.r=r
-                elif isGood=='n':
-                    self.getTransOrDeadband(True)
-                    return
-                
-                else:
-                    print("Sorry", isGood, "is not a valid response. Try y or n.")
+            if not standardQuestion("This will set the lidar offset to x(meters) : " + x + " y(meters) : " + y + " rotation(degrees) :" + r + "?"):
+                self.getTransOrDeadband(True)
+                return
+            else:
+                self.configFile.x=x
+                self.configFile.y=y
+                self.configFile.r=r
+           
 
         
         else:
-            isGood=None
-            while not isGood:
-                print("This will set the lidar deadband to the range from", deadbandStart,"to", deadbandEnd, ".")
-                isGood = input("Does this look correct?(y/n)")
-                if isGood=='y': 
-                    self.configFile.deadband = (deadbandStart, deadbandEnd)
+            if not standardQuestion("This will set the lidar deadband to the range from " + deadbandStart +" to " + deadbandEnd + "?"):
+                self.getTransOrDeadband(False)
+                return
+            else:
+                self.configFile.x=x
+                self.configFile.y=y
+                self.configFile.r=r
 
-                elif isGood=='n':
-                    self.getTransOrDeadband(False)
-                    return
-                
-                else:
-                    print("Sorry", isGood, "is not a valid response. Try y or n.")
 
 
     def getSpeed(self):
@@ -506,72 +475,30 @@ class lidarConfigurationTool:
             return
         
     def getAutoConnectAndStart(self):
-        autoConnect=None
-        autoStart=None
-        while True:
-            response = getInput("Would you like the lidar object to automatically connect when it is created(recommended yes). (y/n)")
+        self.configFile.autoConnect=standardQuestion(
+            "Would you like the lidar object to automatically connect when it is created(recommended yes)?",
+            helpStr=
+                "This setting will allow the lidar to automatically connect when the lidar object is initialized. " +
+                "Otherwise the connection will have to be made manually using the connect method. " +
+                "Generally it is a good idea for the lidar to connect automatically so it is suggested to turn this setting on."
+        )
 
-            if response == 'y':
-                autoConnect==True
-                break
-
-            elif response == 'n':
-                autoConnect==False
-                break
-            
-            elif response == 'help':
-                print(
-                    "This setting will allow the lidar to automatically connect when the lidar object is initialized.",
-                    "Otherwise the connection will have to be made manually using the connect method.",
-                    "Generally it is a good idea for the lidar to connect automatically so it is suggested to turn this setting on."
-                    )
-            else:
-                print("Sorry", response, "is not a valid response. Try y or n.")
-
-        while True:
-            response = getInput("Would you like the lidar object to automatically start when it is connected(recommended no). (y/n)")
-
-            if response == 'y':
-                autoStart==True
-                break
-
-            elif response == 'n':
-                autoStart==False
-                break
-            
-            elif response == 'help':
-                print(
-                    "This setting will allow the lidar to automatically start when the lidar object is connected(including when it is connected via auto connect).",
-                    "Otherwise the lidar will need to be started via the startScan or startExpress methods.",
-                    "This setting is defaulted to true.."
-                )
-            else:
-                print("Sorry", response, "is not a valid response. Try y or n.")
-
-        self.configFile.autoStart=autoStart
-        self.configFile.autoConnect=autoConnect
+        self.configFile.autoStart=standardQuestion(
+            "Would you like the lidar object to automatically start when it is connected(recommended no)?",
+            helpStr=
+                "This setting will allow the lidar to automatically start when the lidar object is connected(including when it is connected via auto connect). "+
+                "Otherwise the lidar will need to be started via the startScan or startExpress methods. " +
+                "This setting is defaulted to true."
+        )
     
     def getDebut(self):
-        debug=None
-        while True:
-            debug = input("Would you like to create the lidar in debug mode (recommended no) (y/n)")
-            if debug=='help':
-                print(
-                    "Debug mode prints additional information about the lidar.",
-                    "This is recommended for projects that dive deep into the lidars internals or for handling issues with the driver itself.",
-                    "However the volume of text can slow down the library slightly and be confusing so we recommend turning it off when it isn't actively being used (including when on robots)."
-                )
-
-            elif debug=='y':
-                debug=True
-                break
-            elif debug=='n':
-                debug=False
-                break
-            else:
-                print("Sorry", debug, "is not a valid response. Try y or n.")
-
-        self.configFile.debugMode=debug
+        self.configFile.debugMode=standardQuestion(
+            "Would you like to create the lidar in debug mode (recommended no)?",
+            helpStr=
+                "Debug mode prints additional information about the lidar. " +
+                "This is recommended for projects that dive deep into the lidars internals or for handling issues with the driver itself. " +
+                "However the volume of text can slow down the library slightly and be confusing so we recommend turning it off when it isn't actively being used (including when on robots)."
+        )
 
 
 
