@@ -1,9 +1,12 @@
 {
-    "port": "/dev/lidar0",
+
+    "serialNumber" : "0d36450424516c46aed8d13c7c377c9a",
     "localTrans": {
         "x": 0.0,
         "y": 0.0,
         "rotation": 0
     },
-    "autoConnect": false
+    "autoConnect": true,
+    "debugMode" : true,
+    "name" : "lidar0"
 }

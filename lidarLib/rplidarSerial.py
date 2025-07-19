@@ -1,5 +1,7 @@
 import string
 import serial
+from serial.tools import list_ports
+
 
 
 class RPlidarSerial:
@@ -7,11 +9,26 @@ class RPlidarSerial:
     def __init__(self):
         self.serial = None
 
-    def open(self, port:string, baudrate:int, timeout:int)->None:
+    def open(self, port:string, vendorID:int, productID:int, serialNumber:string, baudrate:int, timeout:int)->None:
         """
             Opens a serial port on the specified port and with the specified baud rate. 
             Will print a warning but not throw an error if the port can not be opened. This error checking should be managed somewhere else
         """
+
+        if (not (vendorID and productID and serialNumber)) and not port:
+            raise ValueError("lidarSerial can not connect without ether a (vendor id, product id and serial number) or a port")
+
+
+        if (vendorID and productID and serialNumber):
+            for bus in list_ports.comports():
+                if bus.serial_number == serialNumber and bus.vid == vendorID and bus.pid == productID:
+                    port = bus.device
+                    print(port)
+
+        if not port:
+            raise ValueError("Could not find device with product id:", productID, ", Vendor id:", vendorID, ", and serialNumber:", serialNumber, ".",
+            "Please make sure the lidar is plugged in and check that these three values are correct")
+
         if self.serial is not None:
             self.close()
 
