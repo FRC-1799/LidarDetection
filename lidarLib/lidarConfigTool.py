@@ -6,6 +6,8 @@ import serial
 
 from lidarLib.LidarConfigs import lidarConfigs
 from serial.tools import list_ports
+
+from lidarLib.lidarProtocol import RPLIDAR_MAX_MOTOR_PWM
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 
@@ -15,6 +17,9 @@ def getInput(toPrint:str = None, shouldStrip:bool = True, shouldLower:bool = Tru
     if shouldStrip: response=response.strip()
     if shouldLower: response=response.lower()
     return response
+
+
+
 
 class lidarConfigurationTool:
 
@@ -47,13 +52,16 @@ class lidarConfigurationTool:
         self.getTransOrDeadband(False)
 
         #verbose checks
-
+        if self.verbose:
             #speed
-            #id checks
+            self.getSpeed()
+
             #auto start + connect
+            self.getAutoConnectAndStart()
+            
             #debug 
-            #time
-            #out
+
+        #path
 
 
         #name
@@ -325,17 +333,17 @@ class lidarConfigurationTool:
                 "All numbers should be in meters accept for the rotation which should be provided in degrees.", 
                 "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
                 "if you do not wish to use this feature simply do not provide any values",
-                "Once you have entered all coordinates press enter to continue"
+                "Once you have entered all coordinates press enter to continue."
             )
         else:
             print(
                 "Next you will need to enter the deadband of the lidar in relation to the robot.",
                 "This is a range of degree values that will be thrown out by the lidar. This is useful to block out areas occupied by your robot."
-                "This concept can be confusing so we have provided another (slightly scuffed) GUI. The grayed out angles are the ones that will be discarded\n",
+                "This concept can be confusing so we have provided another (slightly scuffed) GUI. The grayed out angles are the ones that will be discarded.",
                 "All numbers should be in degrees.", 
                 "As a reminder FRC coordinates are jank and so X and Y may be swapped from what you are used to.", 
-                "if you do not wish to use this feature simply do not provide any values",
-                "Once you have entered the correct deadband press enter to continue"
+                "If you do not wish to use this feature simply do not provide any values.",
+                "Once you have entered the correct deadband press enter to continue."
             )
         input()
 
@@ -478,9 +486,97 @@ class lidarConfigurationTool:
                     print("Sorry", isGood, "is not a valid response. Try y or n.")
 
 
+    def getSpeed(self):
+        speed = getInput("Please enter the speed you would like the lidar to run at as an integer or leave default for recommended speed")
+        if speed!='':
+            try: speed = int(speed)
+            except:
+                print("sorry", speed, "could not be turned into a int")
+                self.getSpeed()
+                return
+            
+            if speed<0 or speed>RPLIDAR_MAX_MOTOR_PWM:
+                print("Sorry", speed, "is outside of the valid range 0 to", RPLIDAR_MAX_MOTOR_PWM)
+                self.getSpeed()
+                return
+            
+            self.configFile.defaultSpeed=speed
+            
+        else:
+            return
+        
+    def getAutoConnectAndStart(self):
+        autoConnect=None
+        autoStart=None
+        while True:
+            response = getInput("Would you like the lidar object to automatically connect when it is created(recommended yes). (y/n)")
+
+            if response == 'y':
+                autoConnect==True
+                break
+
+            elif response == 'n':
+                autoConnect==False
+                break
+            
+            elif response == 'help':
+                print(
+                    "This setting will allow the lidar to automatically connect when the lidar object is initialized.",
+                    "Otherwise the connection will have to be made manually using the connect method.",
+                    "Generally it is a good idea for the lidar to connect automatically so it is suggested to turn this setting on."
+                    )
+            else:
+                print("Sorry", response, "is not a valid response. Try y or n.")
+
+        while True:
+            response = getInput("Would you like the lidar object to automatically start when it is connected(recommended no). (y/n)")
+
+            if response == 'y':
+                autoStart==True
+                break
+
+            elif response == 'n':
+                autoStart==False
+                break
+            
+            elif response == 'help':
+                print(
+                    "This setting will allow the lidar to automatically start when the lidar object is connected(including when it is connected via auto connect).",
+                    "Otherwise the lidar will need to be started via the startScan or startExpress methods.",
+                    "This setting is defaulted to true.."
+                )
+            else:
+                print("Sorry", response, "is not a valid response. Try y or n.")
+
+        self.configFile.autoStart=autoStart
+        self.configFile.autoConnect=autoConnect
+    
+    def getDebut(self):
+        debug=None
+        while True:
+            debug = input("Would you like to create the lidar in debug mode (recommended no) (y/n)")
+            if debug=='help':
+                print(
+                    "Debug mode prints additional information about the lidar.",
+                    "This is recommended for projects that dive deep into the lidars internals or for handling issues with the driver itself.",
+                    "However the volume of text can slow down the library slightly and be confusing so we recommend turning it off when it isn't actively being used (including when on robots)."
+                )
+
+            elif debug=='y':
+                debug=True
+                break
+            elif debug=='n':
+                debug=False
+                break
+            else:
+                print("Sorry", debug, "is not a valid response. Try y or n.")
+
+        self.configFile.debugMode=debug
 
 
 
+
+    
 
 class InputBox:
 
@@ -545,7 +641,6 @@ class InputBox:
             self.hasValidText=self.text==''
             return 0
         
-
 
 
 
