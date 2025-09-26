@@ -1,0 +1,15 @@
+{
+    "localTrans": {
+        "x": 0.39999999999999997,
+        "y": 0.4000000000000002,
+        "rotation": 45.0
+    },
+    "deadband": [
+        180.0,
+        270.0
+    ],
+    "serialNumber": "0d36450424516c46aed8d13c7c377c9a",
+    "name": "FrontLeftLidar",
+    "type": "lidarConfig",
+    "defaultSpeed":600
+}

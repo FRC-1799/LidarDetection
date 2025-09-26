@@ -21,6 +21,8 @@ class publisher:
             self.loop.start()
         self.nodeWidth:float =0
 
+        self.namedLidarPublishers:dict[str, ntcore.StructPublisher] = {}
+
         
 
     def setUpTables(self):
@@ -41,6 +43,8 @@ class publisher:
 
         self.lidarPoseTopic = self.publishFolder.getStructArrayTopic("lidarPoses", Pose2d)
         self.lidarPosePublisher = self.lidarPoseTopic.publish()
+
+        self.namedLidarPublisher={}
 
 
     def connect(self, port:str=None, teamNumber:int=None, name:str="lidar", startAsServer:bool=False, saveConnectionIfSuccessful:bool=True)->bool: # type: ignore
@@ -71,15 +75,17 @@ class publisher:
 
     def connectionTester(self):
         while True:
-            if self.teamNumber!=0:        
-                if self.connect(teamNumber=self.teamNumber) or self.connect(port="127.0.0.1"):
-                    break
-            else:
-                if self.connect(port="127.0.0.1"):
-                    break
+            if not self.isConnected():
+                if self.teamNumber!=0:        
+                    if self.connect(teamNumber=self.teamNumber) or self.connect(port="127.0.0.1"):
+                        print("Connected on port", self.publisher.getConnections()[0].remote_ip)
+
+                else:
+                    if self.connect(port="127.0.0.1"):
+                        print("Connected on port", self.publisher.getConnections()[0].remote_ip)
+
 
             time.sleep(4)
-        print("Connected on port", self.publisher.getConnections()[0].remote_ip)
                 
 
     def getPose(self)->Pose2d:
@@ -108,7 +114,7 @@ class publisher:
         """Publishes a lidar scan from a list of lidar measurement objects."""
         poses:list[Pose2d] = []
         for measurement in measurements:
-            poses.append(Pose2d(measurement.getX(), measurement.getY(), Rotation2d()))
+            poses.append(measurement.getPose2d())
 
         self.__publishLidarReadings(poses)
            
@@ -119,7 +125,7 @@ class publisher:
         for measurement in map.getPoints():
             measurement:lidarMeasurement
            
-            poses.append(Pose2d(measurement.x, measurement.y, Rotation2d())) # type: ignore
+            poses.append(measurement.getPose2d()) # type: ignore
         
         self.__publishLidarReadings(poses)
 
@@ -160,9 +166,19 @@ class publisher:
         """
         poses:list[Pose2d] = []
         for translation in trans:
-            poses.append(Pose2d(translation.x, translation.y, translation.rotation))
+            poses.append(translation.getPose2d())
 
         self.publishLidarPosesFromPose(poses)
+
+    def publishLidarPoseNamed(self, name:str, trans:translation):
+        if not self.isConnected():
+            return
+        
+        if not name in self.namedLidarPublishers:
+            self.namedLidarPublishers[name] = self.publisher.getStructTopic("lidars/"+name, Pose2d).publish()
+        
+        self.namedLidarPublishers[name].set(Pose2d(trans.x, trans.y, Rotation2d.fromDegrees(trans.rotation)))
+        
 
     def isConnectedToSim(self)->bool:
         """

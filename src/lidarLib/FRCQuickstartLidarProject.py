@@ -4,7 +4,6 @@ import time
 from typing import Any
 import typing
 from lidarLib import lidarManager
-from lidarLib.translation import translation
 from lidarLib.lidarPipeline import lidarPipeline
 from lidarLib.FRCLidarPublisher import publisher
 from lidarLib.lidarMeasurement import lidarMeasurement
@@ -70,16 +69,18 @@ class FRCQuickstartLidarProject:
 
 
         while True:
+            print("god")
             if (self.publisher.isConnected()) and ((not thread) or (not thread.is_alive())):
                 # print(self.publisher.isConnected(), thread.is_alive())
+                self.publisher.publishPointsFromLidarMeasurements([])
                 thread = threading.Thread(target=FRCQuickstartLidarProject.session, daemon=True, kwargs={"ntPublisher":self.publisher, "configList":self.configs})
                 thread.start()
                 
 
             if (not self.publisher.isConnected()) and thread!=None and thread.is_alive():
+                
                 thread.join(5)
-                if thread.is_alive():
-                    raise Warning("Lidar thread did not properly terminate")
+                
 
                 
             time.sleep(5)
@@ -89,38 +90,51 @@ class FRCQuickstartLidarProject:
         
         
         lidars:list[lidarPipeline] = []
+        lidarResetCooldown:list[float] =[]  # type: ignore
         for config in configList:
             lidars.append(lidarManager.makePipedLidar(config))
+            lidarResetCooldown.append(None) # type: ignore
         
-        time.sleep(10)
-        
+        # time.sleep(10)
+        start =time.perf_counter()
+
         while ntPublisher.isConnected():
 
             pointMap:list[lidarMeasurement]=[]
-            lidarTranslations:list[translation] = []
+            index=-1
             for lidar in lidars:
-                if not lidar.isConnected():
-                    
-                    index = lidars.index(lidar)
-                    print("lidar", configList[index].name, "Restarted")
+                index+=1
+                if lidarResetCooldown[index] != None: # type: ignore
+                    if lidarResetCooldown[index]<time.perf_counter():
+                        lidars[index] = lidarManager.makePipedLidar(configList[index])
+                        lidarResetCooldown[index]=None # type: ignore
+                        print(lidars[index].getName(), "reset")
+                else:
 
-                    lidars[index]=lidarManager.makePipedLidar(configList[index])   
+                    if not lidar.isConnected():
+                        lidarResetCooldown[index]=time.perf_counter()+5
 
-                elif lidar.getLastMap():
-                    lidar.setCurrentLocalTranslation(ntPublisher.getRobotPoseAsTrans())
-                    pointMap = pointMap+lidar.getLastMap().getPoints()
-                    lidarTranslations.append(lidar.getCombinedTranslation())
+                    elif lidar.getLastMap():
+                        lidar.setCurrentGlobalTranslation(ntPublisher.getRobotPoseAsTrans())
+                        pointMap = pointMap+lidar.getLastMap().getPoints()
+                        ntPublisher.publishLidarPoseNamed(lidar.getName(), lidar.getCombinedTranslation())
                     
-            
+            # print("publish", len(pointMap))
             ntPublisher.publishPointsFromLidarMeasurements(pointMap)
-            ntPublisher.publishLidarPosesFromTrans(lidarTranslations)
 
+
+            sleepClock:float=start+0.02-time.perf_counter()
+            if sleepClock>0:
+                time.sleep(sleepClock)
+            start+=0.02
+
+        
         for lidar in lidars:
-            lidar.sendQuitRequest()
-        time.sleep(5)
+            if lidar.isConnected():
+                lidar.sendQuitRequest()
 
 
-    
+
 
 if __name__ == '__main__':
     if len(sys.argv)>1:

@@ -28,7 +28,7 @@ class lidarConfigs:
         "vendorID" : 0x10c4,
         "productID" : 0xea60,
         "serialNumber" : None, 
-        "name" : None,
+        "name" : "Unnamed lidar",
         "type": "ValueThatWillNeverBeUsedButNeedsToExistForReasons"
 
     }

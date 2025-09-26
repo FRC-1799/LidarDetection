@@ -26,6 +26,7 @@ def lidarManager(pipeline:"lidarPipeline", lidarConfig:lidarConfigs):
     pipeline._sendLidarInfo(lidar.getInfo()) # type: ignore
     pipeline._sendScanModeTypical(lidar.getScanModeTypical()) # type: ignore
     pipeline._sendScanModeCount(lidar.getScanModeCount()) # type: ignore
+    pipeline._sendName(lidar.getName()) # type: ignore
 
 
     quitCount=0

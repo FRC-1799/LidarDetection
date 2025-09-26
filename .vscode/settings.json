@@ -4,6 +4,7 @@
         "blit",
         "cmap",
         "collidepoint",
+        "Cooldown",
         "cpos",
         "deadband",
         "DMAX",

@@ -48,7 +48,7 @@ class lidarMap:
         self.hostLidar=None # type: ignore
 
 
-    def addVal(self, point:"lidarMeasurement", translation: translation)->None:
+    def addVal(self, point:"lidarMeasurement", localTranslation:translation, globalTranslation: translation)->None:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
             Adds a value to the lidars point list. if the imputed point shares an angle with a point already recorded by the lidar the old point will be replaced
@@ -69,16 +69,20 @@ class lidarMap:
         if point.quality==0 or point.distance==0:
             return
         
+   
         if self.deadband:
             if self.deadbandRaps:
-                if (point.angle+self.sensorThetaOffset)%360>self.deadband[0] or (point.angle+self.sensorThetaOffset)%360<self.deadband[1]:
+                if (point.angle-localTranslation.rotation)%360>self.deadband[0] or (point.angle-localTranslation.rotation)%360<self.deadband[1]:
                     return
             else:
-                if (point.angle+self.sensorThetaOffset)%360>self.deadband[0] and (point.angle+self.sensorThetaOffset)%360<self.deadband[1]:
+                if (point.angle-localTranslation.rotation)%360>self.deadband[0] and (point.angle-localTranslation.rotation)%360<self.deadband[1]:
                     return
+        if localTranslation != None: # type: ignore
+            localTranslation.applyTranslation(point)
 
-        if translation !=None: # type: ignore
-            translation.applyTranslation(point)
+
+        if globalTranslation !=None: # type: ignore
+            globalTranslation.applyTranslation(point)
 
         # if printFlag:
         #     print("valHasBeenAdded", point)

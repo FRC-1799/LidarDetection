@@ -1,5 +1,6 @@
 import time
 from lidarLib.util import polarToX, polarToY, polarToCart
+from wpimath.geometry import Pose2d
 
 class lidarMeasurement:
     """Class to handle a single lidar measurement, coordinates are normally stored in polar but may be gotten in cartesian form using the getX, getY, and getCat methods"""
@@ -66,3 +67,6 @@ class lidarMeasurement:
     def getCart(self)->tuple[float, float]:
         """returns the x and y of the measurement as a tuple. This value is not directly stored and is instead calculated whenever the function is called """
         return polarToCart(self.distance, self.angle)
+
+    def getPose2d(self)->Pose2d:
+        return Pose2d(self.getX(), -self.getY(), 0)

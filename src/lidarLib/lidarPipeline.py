@@ -162,6 +162,15 @@ class lidarPipeline:
 
         self._sendData(dataPacket(dataPacketType.scanModes, scanTypes))
 
+    def _sendName(self, name:str):
+        """
+            Sends the given name to the other side of the pipe.
+            This function should only be called on the lidar side of the pipe as the lidar will not read anything sent to it through this path.
+        """
+
+        self._sendData(dataPacket(dataPacketType.name, name))  
+
+
     def _sendLidarInfo(self, lidarInfo:LidarDeviceInfo)->None:
         """
             Sends the given lidar info to the other side of the pipe.
@@ -413,7 +422,9 @@ class lidarPipeline:
 
         return self.getData(dataPacketType.scanModes)
         
-
+    def getName(self):
+        """Returns the internal name of the lidar. """
+        return self.getData(dataPacketType.name)
 
 class commandPacket:
     def __init__(self, function:Callable, args:list[Any], returnType:int=-1): # type: ignore
@@ -435,10 +446,11 @@ class dataPacketType:
     lidarHealth = 6
     scanModeTypical=7
     scanModeCount=8
+    name=9
     options:list[int] = [
         lidarMap, translation, quitWarning,
         sampleRate, scanModes, lidarInfo,
-        lidarHealth, scanModeTypical, scanModeCount
+        lidarHealth, scanModeTypical, scanModeCount, name
     ]
     
 

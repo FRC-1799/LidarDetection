@@ -45,6 +45,7 @@ class Lidar:
         self.sampleRate:LidarSampleRate=None # type: ignore
 
         self.localTranslation=self.config.localTrans
+        print(self.localTranslation)
         self.globalTranslation=translation.default()
         self.combinedTranslation=translation.default()
 
@@ -188,7 +189,7 @@ class Lidar:
                 if not self.__validatePackage(newData, printErrors=self.config.debugMode):
                     self.__restartScan()
                     return
-                self.currentMap.addVal(lidarMeasurement(newData), self.combinedTranslation)
+                self.currentMap.addVal(lidarMeasurement(newData), self.localTranslation, self.globalTranslation)
             else:
                 #print("break hit")
                 break
@@ -218,7 +219,7 @@ class Lidar:
                 
                 nodes = self.capsuleType._parseCapsule(self.capsulePrev, capsule_current) # type: ignore
                 for index, node in enumerate(nodes): # type: ignore
-                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), self.combinedTranslation) # type: ignore
+                        self.currentMap.addVal(lidarMeasurement(raw_bytes=None, measurement_hq=node), self.localTranslation, self.globalTranslation) # type: ignore
 
                 self.capsulePrev = capsule_current
             else:
@@ -491,7 +492,9 @@ class Lidar:
             #print(scan_mode)
             self.scanModes.append(scan_mode)
         
-        
+    def getName(self)->str:
+        """Returns the internal name of the lidar. """
+        return self.config.name
     
     def getScanModes(self)->list[LidarScanMode]:
         """

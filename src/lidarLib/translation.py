@@ -1,5 +1,5 @@
 from lidarLib.util import polarToCart, cartToPolar
-from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose2d, Rotation2d
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from lidarLib.lidarMeasurement import lidarMeasurement
@@ -40,7 +40,7 @@ class translation:
         """Applies a translation to the given point, the translation will be applied in place"""
         lidarPoint.angle=(lidarPoint.angle-self.rotation)%360
         
-        lidarPoint.distance, lidarPoint.angle = cartToPolar(lidarPoint.getX()-self.x, lidarPoint.getY()-self.y)
+        lidarPoint.distance, lidarPoint.angle = cartToPolar(lidarPoint.getX()+self.x, lidarPoint.getY()-self.y)
 
 
     def combineTranslation(self, addTranslation:"translation")->"translation":
@@ -48,3 +48,5 @@ class translation:
         return translation.fromCart(self.x+addTranslation.x, self.y+addTranslation.y, (self.rotation+addTranslation.rotation)%360)
 
 
+    def getPose2d(self)->Pose2d:
+        return Pose2d(self.x, -self.y, Rotation2d.fromDegrees(self.rotation))
