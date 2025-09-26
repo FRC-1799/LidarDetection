@@ -5,8 +5,8 @@
         "rotation": 45.0
     },
     "deadband": [
-        180.0,
-        270.0
+        90.0,
+        180.0
     ],
     "serialNumber": "0d36450424516c46aed8d13c7c377c9a",
     "name": "FrontLeftLidar",
