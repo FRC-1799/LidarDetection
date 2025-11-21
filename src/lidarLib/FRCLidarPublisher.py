@@ -33,7 +33,7 @@ class publisher:
         self.individualPointPublisher = self.individualPointTopic.publish()
 
 
-        self.poseTopic = self.publisher.getStructTopic("robotPose", Pose2d)
+        self.poseTopic = self.publisher.getStructTopic("RobotPose", Pose2d)
         self.poseSubscriber = self.poseTopic.subscribe(Pose2d())
         
 

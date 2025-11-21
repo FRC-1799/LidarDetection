@@ -1,12 +1,12 @@
 {
     "localTrans": {
-        "x": 0.4000000000000001,
-        "y": -0.4,
-        "rotation": 315.0
+        "x": -0.4000000000000001,
+        "y": 0.4,
+        "rotation": 135.0
     },
     "deadband": [
-        180.0,
-        270.0
+        270.0,
+        359.9
     ],
     "serialNumber": "a65afd2a5a45de408c9bee171da9d1ce",
     "name": "FrontRightLidar",
