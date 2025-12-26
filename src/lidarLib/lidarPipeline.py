@@ -1,12 +1,12 @@
-from multiprocessing import Pipe, Process
+from multiprocessing import Process
 from multiprocessing.connection import Connection
 from time import time
+from typing import Any, Callable
 
 from lidarLib.lidarMap import lidarMap
 from lidarLib.Lidar import Lidar
-from enum import Enum
 
-from lidarLib.lidarProtocol import RPlidarDeviceInfo, RPlidarHealth, RPlidarSampleRate, RPlidarScanMode
+from lidarLib.lidarProtocol import LidarDeviceInfo, LidarHealth, LidarSampleRate, LidarScanMode
 from lidarLib.translation import translation
 
 
@@ -16,22 +16,21 @@ class lidarPipeline:
         This class has all of the user side functions present in a standard lidar object and can therefore be used mostly interchangeably.
         However be aware that due to the very different internals of the two classes they may behave differently in certain circumstances. 
     """
-    def __init__(self, pipe:Connection, host:Process=None):
+    def __init__(self, pipe:Connection, host:Process=None): # type: ignore
         """Creates a render pipe cap surrounding the pipe input"""
         self.__pipe=pipe
-        self.__dataPackets = []
+        self.__dataPackets:list[dataPacket] = []
         self.host=host
 
 
-        for type in dataPacketType.options:
-            print(type)
-            self.__dataPackets.append(None)
+        for dataType in dataPacketType.options: # type: ignore
+            self.__dataPackets.append(None) # type: ignore
 
         self.shouldLive=True
 
         self.__commandQue:list[commandPacket] = []
 
-    def __get(self)->lidarMap:
+    def __get(self)->None:
         """
             INTERNAL FUNCTION, NOT FOR OUTSIDE USE
             returns the most recent data sent over the pipe, since the render machine never sends data this function should never be used by the user
@@ -42,7 +41,7 @@ class lidarPipeline:
                 try:
                     mostRecentVal = self.__pipe.recv()
                     if (mostRecentVal.__class__ == dataPacket):
-                        self.__dataPackets[mostRecentVal.type] = mostRecentVal.data
+                        self.__dataPackets[mostRecentVal.type] = mostRecentVal
 
                     elif (mostRecentVal.__class__ == commandPacket):
                         self.__commandQue.append(mostRecentVal)
@@ -58,7 +57,7 @@ class lidarPipeline:
                 
                 except EOFError:
                     print("lidar pipeline missing connection")
-                    return
+                    return 
         else:
             print("lidar pipeline missing connection")
 
@@ -73,27 +72,27 @@ class lidarPipeline:
 
     def _getNextAction(self)->"commandPacket":
         """
-            Returns the next action packet in the que sent by the other lidar pipe and removes said action from the que.
+            Returns the next action packet in the que sent by the other lidar pipe and removes said action from the que or none if no action is qued.
             This function should only be called on the lidar side of the pipe as the lidar will never send actions through the que.   
     
         """
         self.__get()
-        if (self.__commandQue.len>0):
+        if (len(self.__commandQue)>0):
             return self.__commandQue.pop(0)
         
-        return None
+        return None # type: ignore
     
     def _peakNextAction(self)->"commandPacket":
         """
-            Returns the next action packet in the que sent by the other lidar pipe but does not remove it from the que.
+            Returns the next action packet in the que sent by the other lidar pipe but does not remove it from the que or none if no action is qued.
             This function should only be called on the lidar side of the pipe as the lidar will never send actions through the que.   
         """
 
         self.__get()
-        if (self.__commandQue.len>0):
+        if (len(self.__commandQue)>0):
             return self.__commandQue[0]
         
-        return None
+        return None# type:ignore
     
     def _getActionQue(self)->list["commandPacket"]:
         """
@@ -124,6 +123,11 @@ class lidarPipeline:
         self.__get()
         return self.__dataPackets[type]
     
+    def getData(self, type:int)->Any:
+        data:dataPacket = self.getDataPacket(type)
+        if data:
+            return data.data
+        return None
 
     def _sendMap(self, map:lidarMap)->None:
         """
@@ -142,7 +146,7 @@ class lidarPipeline:
 
         self._sendData(dataPacket(dataPacketType.translation, translation))
 
-    def _sendSampleRate(self, sampleRate:RPlidarSampleRate)->None:
+    def _sendSampleRate(self, sampleRate:LidarSampleRate)->None:
         """
             Sends te given Sample rate to the other side of the pipe.
             This function should only be called on the lidar side of the pipe as the lidar will not read anything sent to it through this path.
@@ -150,7 +154,7 @@ class lidarPipeline:
 
         self._sendData(dataPacket(dataPacketType.sampleRate, sampleRate))
 
-    def _sendScanTypes(self, scanTypes:list[RPlidarScanMode])->None:
+    def _sendScanTypes(self, scanTypes:list[LidarScanMode])->None:
         """
             Sends the given scan types to the other side of the pipe.
             This function should only be called on the lidar side of the pipe as the lidar will not read anything sent to it through this path.
@@ -158,7 +162,16 @@ class lidarPipeline:
 
         self._sendData(dataPacket(dataPacketType.scanModes, scanTypes))
 
-    def _sendLidarInfo(self, lidarInfo:RPlidarDeviceInfo)->None:
+    def _sendName(self, name:str):
+        """
+            Sends the given name to the other side of the pipe.
+            This function should only be called on the lidar side of the pipe as the lidar will not read anything sent to it through this path.
+        """
+
+        self._sendData(dataPacket(dataPacketType.name, name))  
+
+
+    def _sendLidarInfo(self, lidarInfo:LidarDeviceInfo)->None:
         """
             Sends the given lidar info to the other side of the pipe.
             This function should only be called on the lidar side of the pipe as the lidar will not read anything sent to it through this path.
@@ -166,7 +179,7 @@ class lidarPipeline:
                 
         self._sendData(dataPacket(dataPacketType.lidarInfo, lidarInfo))
 
-    def _sendLidarHealth(self, lidarHealth:RPlidarHealth)->None:
+    def _sendLidarHealth(self, lidarHealth:LidarHealth)->None:
         """
             Sends the given lidar health to the other side of the pipe.
             This function should only be called on the lidar side of the pipe as the lidar will not read anything sent to it through this path.
@@ -174,7 +187,7 @@ class lidarPipeline:
 
         self._sendData(dataPacket(dataPacketType.lidarHealth, lidarHealth))
 
-    def _sendScanModeTypical(self, scanMode:RPlidarScanMode)->None:
+    def _sendScanModeTypical(self, scanMode:int)->None:
         """
             Sends the given scan mode to the other side of the pipe.
             This function should only be called on the lidar side of the pipe as the lidar will not read anything sent to it through this path.
@@ -219,8 +232,8 @@ class lidarPipeline:
         """
         try:
             self.__pipe.send(ping())
-        except EOFError as e:
-            print("pipe closure detected")
+        except: 
+            # print("pipe closure detected\n\n\n\n\n\n\n\n\n")
             return False
 
         return True
@@ -237,9 +250,9 @@ class lidarPipeline:
             However it should normally be accurate to 20ms or less.
         """
 
-        return self.getLastMap().endTime + 10/self.getLastMap().getHz > time()
+        return self.getLastMap().endTime + 10/self.getLastMap().getHz() > time()
 
-    def disconnect(self, leaveRunning=False)->None:
+    def disconnect(self, leaveRunning:bool=False)->None:
         """
             Disconnects the lidar from a connected port
             Before disconnecting the function will stop the lidar motor and scan(if applicable) unless leaveRunning is set to true
@@ -263,7 +276,7 @@ class lidarPipeline:
 
         self._sendAction(commandPacket(Lidar.reset,[]))
     
-    def setMotorPwm(self, pwm:int, overrideInternalValue=True)->None:
+    def setMotorPwm(self, pwm:int, overrideInternalValue:bool=True)->None:
         """
             Sets the lidar's motor to the specified pwm value. the speed must be a positive number or 0 and lower or equal to the specified max value(currently 1023).
             Due to the nature of a piped lidar this action may take a small amount of time to execute as it is sent and processed however it should normally only take 20 ms or less. 
@@ -286,8 +299,8 @@ class lidarPipeline:
             Due to the nature of piped lidar this information may be slightly out of date as data is only refreshed so often.
             However it should normally be accurate to 20ms or less.
         """
-
-        return self.getDataPacket(dataPacketType.lidarMap)
+    
+        return self.getData(dataPacketType.lidarMap)
 
 
     def startScan(self)->None:
@@ -298,7 +311,7 @@ class lidarPipeline:
 
         self._sendAction(commandPacket(Lidar.startScan, []))
 
-    def startScanExpress(self, mode:int="auto")->None:
+    def startScanExpress(self, mode:int="auto")->None: # type: ignore
         """
             Starts a scan in express mode (using a compression format so that more samples may be handled per second).
             If a mode is specified then the lidar will attempt to start express in given mode. 
@@ -351,27 +364,27 @@ class lidarPipeline:
             Due to the nature of piped lidar this information may be slightly out of date as data is only refreshed so often.
             However it should normally be accurate to 20ms or less.
         """
-        return self.__dataPackets[dataPacketType.translation]           
+        return self.getData(dataPacketType.translation)           
 
-    def getInfo(self)->RPlidarDeviceInfo:
+    def getInfo(self)->LidarDeviceInfo:
         """
             Returns the connected lidar's info in the form of a RPlidarDeviceInfo object.
             Due to technical limitations this function returns data cached when the lidar was most recently connected.
             While this will not normally cause issues it is something to be aware of.
         """
 
-        return self.getDataPacket(dataPacketType.lidarInfo)
+        return self.getData(dataPacketType.lidarInfo)
 
-    def getHealth(self)->RPlidarHealth:
+    def getHealth(self)->LidarHealth:
         """
             Returns the connected lidar's health in the form of a RPlidarDeviceHealth object.
             Due to technical limitations this function returns data cached when the lidar was most recently connected.
             While this will not normally cause issues it is something to be aware of.
         """
         
-        return self.getDataPacket(dataPacketType.lidarHealth)
+        return self.getData(dataPacketType.lidarHealth)
     
-    def getSampleRate(self)->RPlidarSampleRate:
+    def getSampleRate(self)->LidarSampleRate:
         """
             Fetches and returns the connected lidar's sample rates for both standard and express modes. 
             The measurements are in microseconds per reading. the data is returned in the form of a RPlidarSampleRateObject.
@@ -379,7 +392,7 @@ class lidarPipeline:
             While this will not normally cause issues it is something to be aware of.
         """
 
-        return self.getDataPacket(dataPacketType.sampleRate)
+        return self.getData(dataPacketType.sampleRate)
 
     def getScanModeTypical(self)->int:
         """
@@ -387,7 +400,8 @@ class lidarPipeline:
             Due to technical limitations this function returns data cached when the lidar was most recently connected.
             While this will not normally cause issues it is something to be aware of.
         """
-        return self.getDataPacket(dataPacketType.scanModeTypical)
+        
+        return self.getData(dataPacketType.scanModeTypical)
 
     def getScanModeCount(self)->int:
         """
@@ -396,9 +410,9 @@ class lidarPipeline:
             While this will not normally cause issues it is something to be aware of.
         """
 
-        return self.getDataPacket(dataPacketType.scanModeCount)
+        return self.getData(dataPacketType.scanModeCount)
     
-    def getScanModes(self)->list[RPlidarScanMode]:
+    def getScanModes(self)->list[LidarScanMode]:
         """
             Returns a list of RPlidarScanMode objects for each scan mode supported by the current connected lidar.
             Due to technical limitations this function returns data cached when the lidar was most recently connected.
@@ -406,13 +420,15 @@ class lidarPipeline:
             WARNING: some of the modes returned may be supported by the lidar but not supported by the client side lib.
         """
 
-        return self.getDataPacket(dataPacketType.scanModes)
+        return self.getData(dataPacketType.scanModes)
         
-
+    def getName(self):
+        """Returns the internal name of the lidar. """
+        return self.getData(dataPacketType.name)
 
 class commandPacket:
-    def __init__(self, function:callable, args:list, returnType:int=-1):
-        self.function = function
+    def __init__(self, function:Callable, args:list[Any], returnType:int=-1): # type: ignore
+        self.function:Callable = function # type: ignore
         self.args = args
         if returnType not in dataPacketType.options and returnType!=-1:
             raise ValueError("attempted to make a command packet with a return type that does not exist")
@@ -430,20 +446,21 @@ class dataPacketType:
     lidarHealth = 6
     scanModeTypical=7
     scanModeCount=8
+    name=9
     options:list[int] = [
         lidarMap, translation, quitWarning,
         sampleRate, scanModes, lidarInfo,
-        lidarHealth, scanModeTypical, scanModeCount
+        lidarHealth, scanModeTypical, scanModeCount, name
     ]
     
 
 class dataPacket():
-    def __init__(self, type:int, data):
+    def __init__(self, type:int, data:Any):
         if (type not in dataPacketType.options):
             raise ValueError("Tried to create a data packet with an invalid data type")
          
         self.type = type
-        self.data=data
+        self.data:Any=data
 
 class quitPacket:
     pass

@@ -1,18 +1,17 @@
+from math import floor
 import threading
 import time
 import ntcore
 from wpimath.geometry import Pose2d, Rotation2d
 
 from lidarLib.constants import constants
-from lidarLib.lidarHitboxingMap import lidarHitboxMap
+from lidarLib.lidarMap import lidarMap
 from lidarLib.lidarMeasurement import lidarMeasurement
-from lidarLib.lidarHitboxNode import lidarHitboxNode
 from lidarLib.translation import translation
 
-
 class publisher:
-    def __init__ (self, teamNumber, autoConnect=True):
-        self.publisher=None
+    def __init__ (self, teamNumber:int, autoConnect:bool=True):
+        self.publisher:ntcore.NetworkTableInstance=None # type: ignore
 
         self.teamNumber=teamNumber
         self.autoConnect=autoConnect
@@ -20,32 +19,37 @@ class publisher:
         if self.autoConnect:
             self.loop = threading.Thread(target=self.connectionTester, daemon=True)
             self.loop.start()
+        self.nodeWidth:float =0
+
+        self.namedLidarPublishers:dict[str, ntcore.StructPublisher] = {}
+
+        
 
     def setUpTables(self):
         
 
         self.publishFolder=  self.publisher.getTable("lidar")
-        self.individualPointTopic = self.publishFolder.getStructArrayTopic("individualReadings", Pose2d)
+        self.individualPointTopic = self.publishFolder.getStructArrayTopic("lidarReadings", Pose2d)
         self.individualPointPublisher = self.individualPointTopic.publish()
 
-        self.hitboxTopic = self.publishFolder.getStructArrayTopic("detectedHitboxes", Pose2d)
-        self.hitboxPublisher = self.hitboxTopic.publish()
 
-        self.poseTopic = self.publisher.getStructTopic("robotPose", Pose2d)
+        self.poseTopic = self.publisher.getStructTopic("RobotPose", Pose2d)
         self.poseSubscriber = self.poseTopic.subscribe(Pose2d())
         
 
         self.nodeWidthTopic = self.publishFolder.getFloatTopic("NodeWidth")
         self.nodeWidthPublisher = self.nodeWidthTopic.publish()
-        self.nodeWidthPublisher.set(constants.mapNodeSizeMeters)
+        self.updateNodeWidth(constants.mapNodeSizeMeters)
 
         self.lidarPoseTopic = self.publishFolder.getStructArrayTopic("lidarPoses", Pose2d)
         self.lidarPosePublisher = self.lidarPoseTopic.publish()
 
+        self.namedLidarPublisher={}
 
-    def connect(self, port:str=None, teamNumber:int=None, name="lidar", startAsServer=False, saveConnectionIfSuccessful=True)->bool:
+
+    def connect(self, port:str=None, teamNumber:int=None, name:str="lidar", startAsServer:bool=False, saveConnectionIfSuccessful:bool=True)->bool: # type: ignore
         connecter:ntcore.NetworkTableInstance = ntcore.NetworkTableInstance.getDefault()
-        if port == teamNumber:
+        if port == teamNumber: # type: ignore
             raise ValueError("Must give a team number or a port when trying to connect to network tables. values given were port:", port,". TeamNumber:", teamNumber)
 
         if teamNumber:
@@ -71,70 +75,121 @@ class publisher:
 
     def connectionTester(self):
         while True:
-            if self.teamNumber!=0:        
-                if self.connect(teamNumber=self.teamNumber) or self.connect(port="127.0.0.1"):
-                    break
-            else:
-                if self.connect(port="127.0.0.1"):
-                    break
+            if not self.isConnected():
+                if self.teamNumber!=0:        
+                    if self.connect(teamNumber=self.teamNumber) or self.connect(port="127.0.0.1"):
+                        print("Connected on port", self.publisher.getConnections()[0].remote_ip)
+
+                else:
+                    if self.connect(port="127.0.0.1"):
+                        print("Connected on port", self.publisher.getConnections()[0].remote_ip)
+
 
             time.sleep(4)
-        print("Connected on port", self.publisher.getConnections()[0].remote_ip)
                 
 
     def getPose(self)->Pose2d:
         # TODO
-        # if self.poseSubscriber.getLastChange()< publisher.getServerTimeOffset()-0.2 and not self.isConnectedToSim():
+        # if self.poseSubscriber.get()==Pose2d():
+        #     raise Warning("LidarLib received a pose of 0,0,0. This likely means that the lidar lib is not getting a valid pose input which stops it from accurately tracking")
+
+        # if self.poseSubscriber.getLastChange()< self.publisher.addTimeSyncListener() self.publisher.getServerTimeOffset()-0.2 and not self.isConnectedToSim():
         #     raise Warning("robot pose data (at position \"robotPose\"is not being consistently updated. This can cause lidar data to be inaccurate")
         
+
         return self.poseSubscriber.get()
 
-    def getPoseAsTran(self)->Pose2d:
+    def getRobotPoseAsTrans(self)->translation:
+        """Returns the pose of the robot as a translation object."""
+ 
         return translation.fromPose2d(self.getPose())
+
     
-    def publishPointsFromPoses(self, poses:list[Pose2d]):
-        
-        self.individualPointPublisher.set(poses)
+    
+    def publishLidarReadingFromPose(self, poses:list[Pose2d]):
+        """Publishes a lidar scan from a list of pose2d objects."""
+        self.__publishLidarReadings(poses)
     
     def publishPointsFromLidarMeasurements(self, measurements:list[lidarMeasurement]):
+        """Publishes a lidar scan from a list of lidar measurement objects."""
         poses:list[Pose2d] = []
         for measurement in measurements:
-            poses.append(Pose2d(measurement.getX(), measurement.getY(), Rotation2d()))
+            poses.append(measurement.getPose2d())
 
-        self.publishPointsFromPoses(poses)
-    
+        self.__publishLidarReadings(poses)
+           
 
-    def publishHitboxesFromPoses(self, poses:list[Pose2d]):
-        
-        self.hitboxPublisher.set(poses)
-        
-
-    def publishHitboxesFromHitboxMap(self, map:lidarHitboxMap):
+    def publishHitboxesFromLidarMap(self, map:lidarMap):
+        """Publishes a lidar scan from a lidar Map object"""
         poses:list[Pose2d] = []
-        for node in map.getAs1DList():
-            node:lidarHitboxNode
-            if (not node.isOpen):
-                poses.append(Pose2d(node.x, node.y, Rotation2d()))
+        for measurement in map.getPoints():
+            measurement:lidarMeasurement
+           
+            poses.append(measurement.getPose2d()) # type: ignore
         
-        self.publishHitboxesFromPoses(poses)
+        self.__publishLidarReadings(poses)
 
-    def updateNodeWith(self, nodeWidth:int):
+    def __publishLidarReadings(self, map:list[Pose2d]):
+        """Internal function to publish lidar readings. manages the internal grid so that a manageable amount of data is published to network tables"""
+        poseDict:dict[float, dict[float, bool]] = {}
+        for pose in map:
+            if poseDict.get(floor(pose.x/self.nodeWidth)*self.nodeWidth)==None:
+                 poseDict[floor(pose.x/self.nodeWidth)*self.nodeWidth]={}
+            poseDict[floor(pose.x/self.nodeWidth)*self.nodeWidth][floor(pose.y/self.nodeWidth)*self.nodeWidth] = True
+
+        publishPoses:list[Pose2d] = []
+        for x in poseDict.keys():
+            for y in poseDict[x].keys():
+                publishPoses.append(Pose2d(x, y, Rotation2d()))
+
+        self.individualPointPublisher.set(publishPoses)
+
+
+
+    def updateNodeWidth(self, nodeWidth:float):
+        """Changes the published node width value. This tells other network table connections how big the points on the grid used to publish are."""
+        self.nodeWidth=nodeWidth
         self.nodeWidthPublisher.set(nodeWidth)
 
 
-    def publishLidarPosesFromPose(self, poses:Pose2d):
+    def publishLidarPosesFromPose(self, poses:list[Pose2d]):
+        """
+            Publishes the poses of lidar units from given pose2d objects.
+            If you would like to enter translation objects instead use the publishLidarPosesFromTrans method instead
+        """
         self.lidarPosePublisher.set(poses)
 
     def publishLidarPosesFromTrans(self, trans:list[translation]):
-        poses:Pose2d = []
+        """
+            Publishes the poses of lidar units from given translation objects.
+            If you would like to enter pose2d objects instead use the publishLidarPosesFromPose method instead
+        """
+        poses:list[Pose2d] = []
         for translation in trans:
-            poses.append(Pose2d(translation.x, translation.y, translation.rotation))
+            poses.append(translation.getPose2d())
 
         self.publishLidarPosesFromPose(poses)
 
-    def isConnectedToSim(self)->bool:
-        return self.publisher.isConnected() and self.publisher.getConnections()[0].remote_ip == "127.0.0.1"
+    def publishLidarPoseNamed(self, name:str, trans:translation):
+        if not self.isConnected():
+            return
+        
+        if not name in self.namedLidarPublishers:
+            self.namedLidarPublishers[name] = self.publisher.getStructTopic("lidars/"+name, Pose2d).publish()
+        
+        self.namedLidarPublishers[name].set(Pose2d(trans.x, trans.y, Rotation2d.fromDegrees(trans.rotation)))
         
 
+    def isConnectedToSim(self)->bool:
+        """
+            Returns wether the lidar is connected to a simulation. 
+            If the lidar is not connected at all it will return false. Because of this isConnectedToNonSim should be used if attempting to determine if the lib is connected to a robot.
+        """
+        return self.publisher.isConnected() and self.publisher.getConnections()[0].remote_ip == "127.0.0.1"
+        
+    def isConnectedToNonSim(self)->bool:
+        return self.publisher.isConnected() and not self.isConnectedToSim()
+
     def isConnected(self)->bool:
+        """Returns wether or not the publisher is connected to a network table"""
         return self.publisher and self.publisher.isConnected()

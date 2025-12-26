@@ -4,6 +4,7 @@
         "blit",
         "cmap",
         "collidepoint",
+        "Cooldown",
         "cpos",
         "deadband",
         "DMAX",
@@ -33,5 +34,7 @@
         "stopbits",
         "VARBITSCALE",
         "wpimath"
-    ]
+    ],
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.autoImportCompletions": true
 }

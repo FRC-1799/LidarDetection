@@ -1,0 +1,10 @@
+{
+    "lidarConfigs": [
+        "/home/lidar/Documents/github/LidarDetection/tests/FrontRightLidar.json"
+        ,"/home/lidar/Documents/github/LidarDetection/tests/FrontLeftLidar.json"
+
+       
+    ],
+    "type": "projectConfig",
+    "teamNumber": 1799
+}
