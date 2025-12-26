@@ -69,4 +69,4 @@ class lidarMeasurement:
         return polarToCart(self.distance, self.angle)
 
     def getPose2d(self)->Pose2d:
-        return Pose2d(self.getX(), -self.getY(), 0)
+        return Pose2d(-self.getY(), self.getX(), 0)
