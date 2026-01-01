@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "1799LidarLib"
-version = "0.0.15"
+version = "0.0.16"
 authors = [
   { name="Owen Flanagan", email="twisterjafla@gmail.com" },
 ]
@@ -24,10 +24,11 @@ dependencies = [
 
 ]
 
-
 license = "MIT"
+
 license-files = ["LICEN[CS]E*"]
-exclude = ["tests/lidarLib"]
+
+exclude = ["tests/*"]
 [project.urls]
 Homepage = "https://github.com/FRC-1799/LidarDetection"
 Issues = "https://github.com/FRC-1799/LidarDetection/issues"
